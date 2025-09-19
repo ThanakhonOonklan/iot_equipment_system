@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ทดสอบ API - ระบบยืม-คืนอุปกรณ์ IoT</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #0EA5E9;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .test-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+        }
+        .test-section h3 {
+            color: #333;
+            margin-top: 0;
+        }
+        input, button {
+            padding: 10px;
+            margin: 5px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        input {
+            width: 200px;
+        }
+        button {
+            background-color: #0EA5E9;
+            color: white;
+            border: none;
+            cursor: pointer;
+            padding: 10px 20px;
+        }
+        button:hover {
+            background-color: #0284C7;
+        }
+        .result {
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 5px;
+            font-family: monospace;
+            white-space: pre-wrap;
+        }
+        .success {
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        .error {
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        .info {
+            background-color: #d1ecf1;
+            border: 1px solid #bee5eb;
+            color: #0c5460;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 ทดสอบ API - ระบบยืม-คืนอุปกรณ์ IoT</h1>
+        
+        <div class="test-section">
+            <h3>📝 ทดสอบ Register API</h3>
+            <div>
+                <input type="text" id="regFullname" placeholder="ชื่อ-นามสกุล" value="นาย สมชาย ใจดี">
+                <input type="email" id="regEmail" placeholder="อีเมล" value="s6706021410195@kmutnb.ac.th">
+                <input type="text" id="regStudentId" placeholder="รหัสนักศึกษา" value="s6706021410195">
+                <input type="password" id="regPassword" placeholder="รหัสผ่าน" value="password">
+                <input type="password" id="regConfirmPassword" placeholder="ยืนยันรหัสผ่าน" value="password">
+            </div>
+            <button onclick="testRegister()">ทดสอบ Register</button>
+            <div id="registerResult" class="result" style="display: none;"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>🔐 ทดสอบ Login API</h3>
+            <div>
+                <input type="text" id="loginStudentId" placeholder="รหัสนักศึกษา" value="s6706021410192">
+                <input type="password" id="loginPassword" placeholder="รหัสผ่าน" value="password">
+            </div>
+            <button onclick="testLogin()">ทดสอบ Login</button>
+            <div id="loginResult" class="result" style="display: none;"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>❌ ทดสอบ Login - รหัสนักศึกษาไม่มีในฐานข้อมูล</h3>
+            <div>
+                <input type="text" id="loginStudentIdNotFound" placeholder="รหัสนักศึกษา" value="s9999999999999">
+                <input type="password" id="loginPasswordNotFound" placeholder="รหัสผ่าน" value="password">
+            </div>
+            <button onclick="testLoginNotFound()">ทดสอบ Login (ไม่มีบัญชี)</button>
+            <div id="loginNotFoundResult" class="result" style="display: none;"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>❌ ทดสอบ Login - รหัสผ่านผิด</h3>
+            <div>
+                <input type="text" id="loginStudentIdWrong" placeholder="รหัสนักศึกษา" value="s6706021410192">
+                <input type="password" id="loginPasswordWrong" placeholder="รหัสผ่าน" value="wrongpassword">
+            </div>
+            <button onclick="testLoginWrongPassword()">ทดสอบ Login (รหัสผ่านผิด)</button>
+            <div id="loginWrongResult" class="result" style="display: none;"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>🔧 ทดสอบการเชื่อมต่อฐานข้อมูล</h3>
+            <button onclick="testConnection()">ทดสอบการเชื่อมต่อ</button>
+            <div id="connectionResult" class="result" style="display: none;"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE_URL = 'http://localhost/project/api'; // เปลี่ยนตาม path ของคุณ
+        const CONNECT_URL = 'http://localhost/project/Connect.php'; // เปลี่ยนตาม path ของคุณ
+
+        async function testRegister() {
+            const resultDiv = document.getElementById('registerResult');
+            resultDiv.style.display = 'block';
+            resultDiv.className = 'result info';
+            resultDiv.textContent = 'กำลังทดสอบ Register API...';
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/register.php`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        fullname: document.getElementById('regFullname').value,
+                        email: document.getElementById('regEmail').value,
+                        student_id: document.getElementById('regStudentId').value,
+                        password: document.getElementById('regPassword').value,
+                        confirm_password: document.getElementById('regConfirmPassword').value
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (response.ok) {
+                    resultDiv.className = 'result success';
+                    resultDiv.textContent = `✅ Register สำเร็จ!\n\n${JSON.stringify(data, null, 2)}`;
+                } else {
+                    resultDiv.className = 'result error';
+                    resultDiv.textContent = `❌ Register ล้มเหลว!\n\n${JSON.stringify(data, null, 2)}`;
+                }
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = `❌ เกิดข้อผิดพลาด: ${error.message}`;
+            }
+        }
+
+        async function testLogin() {
+            const resultDiv = document.getElementById('loginResult');
+            resultDiv.style.display = 'block';
+            resultDiv.className = 'result info';
+            resultDiv.textContent = 'กำลังทดสอบ Login API...';
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/login.php`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        student_id: document.getElementById('loginStudentId').value,
+                        password: document.getElementById('loginPassword').value
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (response.ok) {
+                    resultDiv.className = 'result success';
+                    resultDiv.textContent = `✅ Login สำเร็จ!\n\n${JSON.stringify(data, null, 2)}`;
+                } else {
+                    resultDiv.className = 'result error';
+                    resultDiv.textContent = `❌ Login ล้มเหลว!\n\n${JSON.stringify(data, null, 2)}`;
+                }
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = `❌ เกิดข้อผิดพลาด: ${error.message}`;
+            }
+        }
+
+        async function testLoginNotFound() {
+            const resultDiv = document.getElementById('loginNotFoundResult');
+            resultDiv.style.display = 'block';
+            resultDiv.className = 'result info';
+            resultDiv.textContent = 'กำลังทดสอบ Login API (ไม่มีบัญชี)...';
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/login.php`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        student_id: document.getElementById('loginStudentIdNotFound').value,
+                        password: document.getElementById('loginPasswordNotFound').value
+                    })
+                });
+
+                const data = await response.json();
+                
+                resultDiv.className = 'result error';
+                resultDiv.textContent = `❌ Login ล้มเหลว (ตามที่คาดหวัง)!\n\n${JSON.stringify(data, null, 2)}`;
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = `❌ เกิดข้อผิดพลาด: ${error.message}`;
+            }
+        }
+
+        async function testLoginWrongPassword() {
+            const resultDiv = document.getElementById('loginWrongResult');
+            resultDiv.style.display = 'block';
+            resultDiv.className = 'result info';
+            resultDiv.textContent = 'กำลังทดสอบ Login API (รหัสผ่านผิด)...';
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/login.php`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        student_id: document.getElementById('loginStudentIdWrong').value,
+                        password: document.getElementById('loginPasswordWrong').value
+                    })
+                });
+
+                const data = await response.json();
+                
+                resultDiv.className = 'result error';
+                resultDiv.textContent = `❌ Login ล้มเหลว (ตามที่คาดหวัง)!\n\n${JSON.stringify(data, null, 2)}`;
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = `❌ เกิดข้อผิดพลาด: ${error.message}`;
+            }
+        }
+
+        async function testConnection() {
+            const resultDiv = document.getElementById('connectionResult');
+            resultDiv.style.display = 'block';
+            resultDiv.className = 'result info';
+            resultDiv.textContent = 'กำลังทดสอบการเชื่อมต่อฐานข้อมูล...';
+
+            try {
+                const response = await fetch(CONNECT_URL);
+                const data = await response.json();
+                
+                if (response.ok) {
+                    resultDiv.className = 'result success';
+                    resultDiv.textContent = `✅ เชื่อมต่อฐานข้อมูลสำเร็จ!\n\n${JSON.stringify(data, null, 2)}`;
+                } else {
+                    resultDiv.className = 'result error';
+                    resultDiv.textContent = `❌ เชื่อมต่อฐานข้อมูลล้มเหลว!\n\n${JSON.stringify(data, null, 2)}`;
+                }
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = `❌ เกิดข้อผิดพลาด: ${error.message}`;
+            }
+        }
+    </script>
+</body>
+</html>
