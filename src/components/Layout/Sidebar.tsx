@@ -4,12 +4,13 @@ import {
   Package, 
   Users, 
   History, 
-  FileText,
   ChevronLeft,
   ChevronRight,
-  LogOut
+  LogOut,
+  ShoppingCart
 } from 'lucide-react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { useAuth } from '../../contexts/AuthContext';
 
 interface SidebarProps {
   isCollapsed: boolean;
@@ -20,29 +21,38 @@ interface SidebarProps {
 const menuItems = {
   admin: [
     { icon: LayoutDashboard, label: 'Dashboard', path: '/dashboard' },
-    { icon: Package, label: 'จัดการอุปกรณ์', path: '/devices' },
+    { icon: ShoppingCart, label: 'ยืมอุปกรณ์', path: '/borrow' },
+    { icon: Package, label: 'จัดการอุปกรณ์', path: '/equipment' },
     { icon: Users, label: 'จัดการสมาชิก', path: '/users' },
     { icon: History, label: 'ประวัติการยืม-คืน', path: '/history' },
   ],
   staff: [
     { icon: LayoutDashboard, label: 'Dashboard', path: '/dashboard' },
-    { icon: Package, label: 'จัดการอุปกรณ์', path: '/devices' },
+    { icon: ShoppingCart, label: 'ยืมอุปกรณ์', path: '/borrow' },
+    { icon: Package, label: 'จัดการอุปกรณ์', path: '/equipment' },
+    { icon: Users, label: 'จัดการสมาชิก', path: '/users' },
     { icon: History, label: 'ประวัติการยืม-คืน', path: '/history' },
-    { icon: FileText, label: 'จัดการคำขอยืม', path: '/loan-requests' },
   ],
   user: [
     { icon: LayoutDashboard, label: 'Dashboard', path: '/dashboard' },
-    { icon: FileText, label: 'ส่งคำขอยืม', path: '/loan-requests' },
+    { icon: ShoppingCart, label: 'ยืมอุปกรณ์', path: '/borrow' },
+    { icon: Package, label: 'จัดการอุปกรณ์', path: '/equipment' },
+    { icon: Users, label: 'จัดการสมาชิก', path: '/users' },
     { icon: History, label: 'ประวัติการยืม-คืน', path: '/history' },
   ],
   guest: [
     { icon: LayoutDashboard, label: 'Dashboard', path: '/dashboard' },
+    { icon: ShoppingCart, label: 'ยืมอุปกรณ์', path: '/borrow' },
+    { icon: Package, label: 'จัดการอุปกรณ์', path: '/equipment' },
+    { icon: Users, label: 'จัดการสมาชิก', path: '/users' },
+    { icon: History, label: 'ประวัติการยืม-คืน', path: '/history' },
   ]
 };
 
 export const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, onToggle, userRole }) => {
   const location = useLocation();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const items = menuItems[userRole] || menuItems.user;
 
   const handleLogout = () => {
@@ -62,10 +72,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, onToggle, userRol
         <div className="flex items-center justify-between">
           {!isCollapsed && (
             <div className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-gradient-to-r from-[#0EA5E9] to-[#0284C7] rounded-lg flex items-center justify-center">
-                <Package className="w-5 h-5 text-white" />
-              </div>
-              <span className="font-bold text-gray-600">IoT System</span>
+              
+              <span className="font-bold text-gray-600">บริการยืม-คืนอุปกรณ์ IoT</span>
             </div>
           )}
           <button
@@ -114,8 +122,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, onToggle, userRol
       <div className="p-4 border-t border-gray-200">
         {!isCollapsed && (
           <div className="mb-3">
-            <div className="text-sm text-gray-600">สถานะ: {userRole.toUpperCase()}</div>
-            <div className="text-xs text-gray-500">รหัส: S123456789</div>
+            <div className="text-sm text-gray-800 font-semibold">{user?.fullname || 'ผู้ใช้งาน'}</div>
+            <div className="text-xs text-gray-600">บทบาท: {(user?.role || userRole).toUpperCase()}</div>
+            <div className="text-xs text-gray-500">รหัส: {user?.student_id || '-'}</div>
           </div>
         )}
         <button

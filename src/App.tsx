@@ -2,8 +2,11 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { AuthProvider } from './contexts/AuthContext';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { Login } from './screens/Login';
-import { SignUp } from './screens/SignUp';
+import { SignUp } from './screens/Register';
 import { Home } from './screens/Home';
+import Equipment from './screens/Equipment';
+import Users from './screens/ManageUsers';
+import { BorrowEquipment } from './screens/BorrowEquipment';
 
 function App() {
   return (
@@ -20,6 +23,30 @@ function App() {
                 <Home />
               </ProtectedRoute>
             } 
+          />
+          <Route 
+            path="/users" 
+            element={
+              <ProtectedRoute>
+                <Users />
+              </ProtectedRoute>
+            }
+          />
+          <Route 
+            path="/equipment"
+            element={
+              <ProtectedRoute>
+                <Equipment />
+              </ProtectedRoute>
+            }
+          />
+          <Route 
+            path="/borrow"
+            element={
+              <ProtectedRoute>
+                <BorrowEquipment />
+              </ProtectedRoute>
+            }
           />
         </Routes>
       </Router>

@@ -1,9 +1,4 @@
-/**
- * API Service สำหรับเชื่อมต่อกับ PHP Backend
- * API Service for connecting to PHP Backend
- */
-
-const API_BASE_URL = 'http://localhost/project/api'; 
+const API_BASE_URL = 'http://localhost/iot_equipment_system/api'; 
 
 export interface LoginRequest {
   student_id: string;
@@ -25,6 +20,12 @@ export interface User {
   fullname: string;
   role: string;
   status: string;
+}
+
+export interface ListUsersResponse {
+  success: boolean;
+  message: string;
+  data: { users: User[] };
 }
 
 export interface LoginResponse {
@@ -51,6 +52,78 @@ export interface ApiError {
   success: false;
   message: string;
   errors?: any;
+}
+
+export interface Equipment {
+  id: number;
+  name: string;
+  description?: string;
+  category: string;
+  image_url?: string;
+  quantity_total: number;
+  quantity_available: number;
+  status: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface ListEquipmentResponse {
+  success: boolean;
+  message: string;
+  data: { equipment: Equipment[] };
+}
+
+export interface EquipmentMutationResponse {
+  success: boolean;
+  message: string;
+  data: { equipment: Equipment };
+}
+
+export interface BorrowRequest {
+  id: number;
+  user_id: number;
+  fullname: string;
+  student_id: string;
+  request_date: string;
+  borrow_date: string;
+  return_date: string;
+  status: 'pending' | 'approved' | 'rejected' | 'completed';
+  notes?: string;
+  created_at: string;
+  updated_at: string;
+  items: BorrowRequestItem[];
+}
+
+export interface BorrowRequestItem {
+  id: number;
+  equipment_id: number;
+  equipment_name: string;
+  category: string;
+  quantity_requested: number;
+  quantity_approved: number;
+}
+
+export interface CreateBorrowRequestData {
+  user_id: number;
+  borrow_date: string;
+  return_date: string;
+  notes?: string;
+  items: Array<{
+    equipment_id: number;
+    quantity: number;
+  }>;
+}
+
+export interface ListBorrowRequestsResponse {
+  success: boolean;
+  message: string;
+  data: { requests: BorrowRequest[] };
+}
+
+export interface BorrowRequestResponse {
+  success: boolean;
+  message: string;
+  data: { request: BorrowRequest };
 }
 
 class ApiService {
@@ -80,7 +153,7 @@ class ApiService {
 
     try {
       const response = await fetch(url, config);
-      
+        
       // ตรวจสอบว่า response เป็น JSON หรือไม่
       const contentType = response.headers.get('content-type');
       if (!contentType || !contentType.includes('application/json')) {
@@ -117,12 +190,109 @@ class ApiService {
   }
 
   /**
+   * Equipment APIs
+   */
+  async listEquipment(): Promise<ListEquipmentResponse> {
+    return this.request<ListEquipmentResponse>('/equipment.php', { method: 'GET' });
+  }
+
+  async createEquipment(payload: Partial<Equipment>): Promise<EquipmentMutationResponse> {
+    return this.request<EquipmentMutationResponse>('/equipment.php', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
+  }
+
+  async updateEquipment(id: number, payload: Partial<Equipment>): Promise<EquipmentMutationResponse> {
+    return this.request<EquipmentMutationResponse>('/equipment.php', {
+      method: 'PUT',
+      body: JSON.stringify({ id, ...payload }),
+    });
+  }
+
+  async deleteEquipment(id: number): Promise<{ success: boolean; message: string }> {
+    return this.request<{ success: boolean; message: string }>('/equipment.php', {
+      method: 'DELETE',
+      body: JSON.stringify({ id }),
+    });
+  }
+
+  /**
    * Register API
    */
   async register(userData: RegisterRequest): Promise<RegisterResponse> {
     return this.request<RegisterResponse>('/register.php', {
       method: 'POST',
       body: JSON.stringify(userData),
+    });
+  }
+
+  /**
+   * List Users
+   */
+  async listUsers(): Promise<ListUsersResponse> {
+    return this.request<ListUsersResponse>('/users.php', {
+      method: 'GET',
+    });
+  }
+
+  /**
+   * Create User (admin)
+   */
+  async createUser(payload: RegisterRequest & { role?: string; status?: string; }): Promise<RegisterResponse> {
+    return this.request<RegisterResponse>('/users.php', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
+  }
+
+  /**
+   * Update User (admin)
+   */
+  async updateUser(id: number, payload: Partial<RegisterRequest> & { role?: string; status?: string; }): Promise<RegisterResponse> {
+    return this.request<RegisterResponse>('/users.php', {
+      method: 'PUT',
+      body: JSON.stringify({ id, ...payload }),
+    });
+  }
+
+  /**
+   * Delete User (admin)
+   */
+  async deleteUser(id: number): Promise<{ success: boolean; message: string }> {
+    return this.request<{ success: boolean; message: string }>('/users.php', {
+      method: 'DELETE',
+      body: JSON.stringify({ id }),
+    });
+  }
+
+  /**
+   * Borrow Request APIs
+   */
+  async listBorrowRequests(): Promise<ListBorrowRequestsResponse> {
+    return this.request<ListBorrowRequestsResponse>('/borrow_requests.php', {
+      method: 'GET',
+    });
+  }
+
+  async createBorrowRequest(data: CreateBorrowRequestData): Promise<BorrowRequestResponse> {
+    return this.request<BorrowRequestResponse>('/borrow_requests.php', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async updateBorrowRequest(id: number, data: Partial<CreateBorrowRequestData>): Promise<BorrowRequestResponse> {
+    return this.request<BorrowRequestResponse>('/borrow_requests.php', {
+      method: 'PUT',
+      body: JSON.stringify({ id, ...data }),
+    });
+  }
+
+  async deleteBorrowRequest(id: number): Promise<{ success: boolean; message: string }> {
+    return this.request<{ success: boolean; message: string }>('/borrow_requests.php', {
+      method: 'DELETE',
+      body: JSON.stringify({ id }),
     });
   }
 

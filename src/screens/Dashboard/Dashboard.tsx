@@ -1,31 +1,59 @@
 import React, { useState, useEffect } from 'react';
-import { Users, Package, Clock, CheckCircle } from 'lucide-react';
+import { Users, Package, CheckCircle, Activity } from 'lucide-react';
 import { StatsCard } from '../../components/Dashboard/StatsCard';
 import { RecentActivity } from '../../components/Dashboard/RecentActivity';
+import { apiService } from '../../services/api';
+import { useNavigate } from 'react-router-dom';
 
 export const Dashboard: React.FC = () => {
+  const navigate = useNavigate();
   const [stats, setStats] = useState({
     totalUsers: 0,
-    totalDevices: 0,
-    pendingRequests: 0,
-    approvedToday: 0
+    totalEquipment: 0,
+    availableEquipment: 0,
+    borrowedEquipment: 0,
+    loading: true
   });
 
-  // Simulate real-time updates
+  // ดึงข้อมูลจริงจาก API
   useEffect(() => {
-    const updateStats = () => {
-      setStats({
-        totalUsers: Math.floor(Math.random() * 50) + 150,
-        totalDevices: Math.floor(Math.random() * 20) + 80,
-        pendingRequests: Math.floor(Math.random() * 10) + 5,
-        approvedToday: Math.floor(Math.random() * 15) + 10
-      });
+    const fetchStats = async () => {
+      try {
+        setStats(prev => ({ ...prev, loading: true }));
+        
+        // ดึงข้อมูลผู้ใช้
+        const usersResponse = await apiService.listUsers();
+        const totalUsers = usersResponse.data.users.length;
+        
+        // ดึงข้อมูลอุปกรณ์
+        const equipmentResponse = await apiService.listEquipment();
+        const equipment = equipmentResponse.data.equipment;
+        const totalEquipment = equipment.length;
+        
+        // คำนวณอุปกรณ์ที่พร้อมยืม
+        const availableEquipment = equipment.filter(eq => 
+          eq.status === 'available' && eq.quantity_available > 0
+        ).length;
+        
+        // คำนวณอุปกรณ์ที่ถูกยืม (จำลอง)
+        const borrowedEquipment = equipment.filter(eq => 
+          eq.status === 'borrowed' || eq.quantity_available < eq.quantity_total
+        ).length;
+
+        setStats({
+          totalUsers,
+          totalEquipment,
+          availableEquipment,
+          borrowedEquipment,
+          loading: false
+        });
+      } catch (error) {
+        console.error('Error fetching stats:', error);
+        setStats(prev => ({ ...prev, loading: false }));
+      }
     };
 
-    updateStats();
-    const interval = setInterval(updateStats, 5000); // Update every 5 seconds
-
-    return () => clearInterval(interval);
+    fetchStats();
   }, []);
 
   return (
@@ -40,32 +68,112 @@ export const Dashboard: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <StatsCard
           title="จำนวนสมาชิกทั้งหมด"
-          value={stats.totalUsers}
+          value={stats.loading ? "..." : stats.totalUsers}
           icon={Users}
-          trend={{ value: 12, isPositive: true }}
           color="#0EA5E9"
+          onClick={() => navigate('/users')}
         />
         <StatsCard
           title="จำนวนอุปกรณ์ทั้งหมด"
-          value={stats.totalDevices}
+          value={stats.loading ? "..." : stats.totalEquipment}
           icon={Package}
-          trend={{ value: 5, isPositive: true }}
           color="#10B981"
+          onClick={() => navigate('/equipment')}
         />
         <StatsCard
-          title="คำขอรอการอนุมัติ"
-          value={stats.pendingRequests}
-          icon={Clock}
-          trend={{ value: -8, isPositive: false }}
-          color="#F59E0B"
-        />
-        <StatsCard
-          title="อนุมัติวันนี้"
-          value={stats.approvedToday}
+          title="อุปกรณ์พร้อมยืม"
+          value={stats.loading ? "..." : stats.availableEquipment}
           icon={CheckCircle}
-          trend={{ value: 15, isPositive: true }}
-          color="#8B5CF6"
+          color="#059669"
+          onClick={() => navigate('/equipment')}
         />
+        <StatsCard
+          title="อุปกรณ์ถูกยืม"
+          value={stats.loading ? "..." : stats.borrowedEquipment}
+          icon={Activity}
+          color="#DC2626"
+          onClick={() => navigate('/equipment')}
+        />
+      </div>
+
+      {/* Additional Stats */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Equipment Status Overview */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+            <Package className="h-5 w-5 text-blue-500" />
+            สถานะอุปกรณ์
+          </h3>
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-gray-600">อุปกรณ์พร้อมยืม</span>
+              <span className="text-sm font-semibold text-green-600">
+                {stats.loading ? "..." : stats.availableEquipment} ชิ้น
+              </span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-gray-600">อุปกรณ์ถูกยืม</span>
+              <span className="text-sm font-semibold text-red-600">
+                {stats.loading ? "..." : stats.borrowedEquipment} ชิ้น
+              </span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-gray-600">อุปกรณ์ทั้งหมด</span>
+              <span className="text-sm font-semibold text-gray-900">
+                {stats.loading ? "..." : stats.totalEquipment} ชิ้น
+              </span>
+            </div>
+            <div className="pt-2 border-t border-gray-100">
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-gray-600">อัตราการใช้งาน</span>
+                <span className="text-sm font-semibold text-blue-600">
+                  {stats.loading ? "..." : stats.totalEquipment > 0 
+                    ? Math.round((stats.borrowedEquipment / stats.totalEquipment) * 100) 
+                    : 0}%
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* System Overview */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+            <Activity className="h-5 w-5 text-purple-500" />
+            ภาพรวมระบบ
+          </h3>
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-gray-600">สมาชิกทั้งหมด</span>
+              <span className="text-sm font-semibold text-blue-600">
+                {stats.loading ? "..." : stats.totalUsers} คน
+              </span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-gray-600">อุปกรณ์ทั้งหมด</span>
+              <span className="text-sm font-semibold text-green-600">
+                {stats.loading ? "..." : stats.totalEquipment} ชิ้น
+              </span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-gray-600">อัตราส่วนสมาชิกต่ออุปกรณ์</span>
+              <span className="text-sm font-semibold text-gray-900">
+                {stats.loading ? "..." : stats.totalEquipment > 0 
+                  ? (stats.totalUsers / stats.totalEquipment).toFixed(1) 
+                  : 0} : 1
+              </span>
+            </div>
+            <div className="pt-2 border-t border-gray-100">
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-gray-600">สถานะระบบ</span>
+                <span className="text-sm font-semibold text-green-600 flex items-center gap-1">
+                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                  ปกติ
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Activity */}
