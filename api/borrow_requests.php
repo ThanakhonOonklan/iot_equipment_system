@@ -152,6 +152,56 @@ function updateBorrowRequest($conn, $input) {
     }
     
     $id = (int)$input['id'];
+    $action = isset($input['action']) ? $input['action'] : '';
+    
+    // Handle approve action
+    if ($action === 'approve') {
+        $approver_id = isset($input['approver_id']) ? (int)$input['approver_id'] : null;
+        
+        // Get approver name
+        $approver_name = 'ไม่ระบุ';
+        if ($approver_id) {
+            $stmt = $conn->prepare('SELECT fullname FROM users WHERE id = ?');
+            $stmt->execute([$approver_id]);
+            $approver = $stmt->fetch(PDO::FETCH_ASSOC);
+            if ($approver) {
+                $approver_name = $approver['fullname'];
+            }
+        }
+        
+        // Update request status
+        $upd = $conn->prepare('UPDATE borrow_requests SET status = :status, approver_id = :approver_id, approver_name = :approver_name, approved_at = NOW() WHERE id = :id');
+        $status = 'approved';
+        $upd->bindParam(':status', $status, PDO::PARAM_STR);
+        $upd->bindParam(':approver_id', $approver_id, PDO::PARAM_INT);
+        $upd->bindParam(':approver_name', $approver_name, PDO::PARAM_STR);
+        $upd->bindParam(':id', $id, PDO::PARAM_INT);
+        
+        if (!$upd->execute()) {
+            Response::error('ไม่สามารถอนุมัติคำขอได้', 500);
+        }
+            
+        Response::success('อนุมัติคำขอสำเร็จ');
+        return;
+    }
+    
+    // Handle reject action
+    if ($action === 'reject') {
+        $notes = isset($input['notes']) ? Security::sanitize($input['notes']) : 'ถูกปฏิเสธ';
+        
+        $upd = $conn->prepare('UPDATE borrow_requests SET status = :status, notes = :notes WHERE id = :id');
+        $status = 'rejected';
+        $upd->bindParam(':status', $status, PDO::PARAM_STR);
+        $upd->bindParam(':notes', $notes, PDO::PARAM_STR);
+        $upd->bindParam(':id', $id, PDO::PARAM_INT);
+        
+        if (!$upd->execute()) {
+            Response::error('ไม่สามารถปฏิเสธคำขอได้', 500);
+        }
+        
+        Response::success('ปฏิเสธคำขอสำเร็จ');
+        return;
+    }
     
     $stmt = $conn->prepare('SELECT id FROM borrow_requests WHERE id = ?');
     $stmt->bindParam(1, $id, PDO::PARAM_INT);

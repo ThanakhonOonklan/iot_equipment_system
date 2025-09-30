@@ -89,6 +89,9 @@ export interface BorrowRequest {
   return_date: string;
   status: 'pending' | 'approved' | 'rejected' | 'completed';
   notes?: string;
+  approver_id?: number;
+  approver_name?: string;
+  approved_at?: string;
   created_at: string;
   updated_at: string;
   items: BorrowRequestItem[];
@@ -126,6 +129,24 @@ export interface BorrowRequestResponse {
   data: { request: BorrowRequest };
 }
 
+// Pending registration types
+export interface PendingRegistration {
+  id: number;
+  fullname: string;
+  email: string;
+  student_id: string;
+  role: 'admin' | 'staff' | 'user';
+  status: 'pending' | 'approved' | 'rejected';
+  requested_at: string;
+  reviewed_at?: string;
+}
+
+export interface ListPendingResponse {
+  success: boolean;
+  message: string;
+  data: { requests: PendingRegistration[] };
+}
+
 class ApiService {
   private baseURL: string;
 
@@ -153,17 +174,16 @@ class ApiService {
 
     try {
       const response = await fetch(url, config);
-        
-      // ตรวจสอบว่า response เป็น JSON หรือไม่
+
       const contentType = response.headers.get('content-type');
       if (!contentType || !contentType.includes('application/json')) {
-        throw new Error('ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้ กรุณาตรวจสอบการเชื่อมต่ออินเทอร์เน็ต');
+        throw { status: 0, message: 'ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้ กรุณาตรวจสอบการเชื่อมต่ออินเทอร์เน็ต' };
       }
-      
+
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.message || `HTTP error! status: ${response.status}`);
+        throw { status: response.status, message: data.message || `HTTP error! status: ${response.status}` };
       }
 
       return data;
@@ -171,12 +191,17 @@ class ApiService {
       console.error('API Request Error:', error);
       
       // ถ้าเป็น network error หรือ fetch error
-      if (error instanceof TypeError && error.message.includes('fetch')) {
-        throw new Error('ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้ กรุณาตรวจสอบการเชื่อมต่ออินเทอร์เน็ต');
+      if ((error as any) instanceof TypeError && (error as any).message.includes('fetch')) {
+        throw { status: 0, message: 'ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้ กรุณาตรวจสอบการเชื่อมต่ออินเทอร์เน็ต' };
       }
       
-      throw error;
+      throw error as any;
     }
+  }
+
+  // Expose a safe wrapper for custom calls when needed
+  async raw<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
+    return this.request<T>(endpoint, options);
   }
 
   /**
@@ -293,6 +318,27 @@ class ApiService {
     return this.request<{ success: boolean; message: string }>('/borrow_requests.php', {
       method: 'DELETE',
       body: JSON.stringify({ id }),
+    });
+  }
+
+  /**
+   * Pending Registration APIs
+   */
+  async createPendingRegistration(payload: { fullname: string; email: string; student_id: string; password: string; role?: string; }): Promise<{ success: boolean; message: string; }> {
+    return this.request<{ success: boolean; message: string; }>('/pending_registrations.php', {
+      method: 'POST',
+      body: JSON.stringify(payload)
+    });
+  }
+
+  async listPendingRegistrations(): Promise<ListPendingResponse> {
+    return this.request<ListPendingResponse>('/pending_registrations.php', { method: 'GET' });
+  }
+
+  async reviewPendingRegistration(id: number, action: 'approve' | 'reject', notes?: string): Promise<{ success: boolean; message: string; }> {
+    return this.request<{ success: boolean; message: string; }>('/pending_registrations.php', {
+      method: 'PUT',
+      body: JSON.stringify({ id, action, notes })
     });
   }
 

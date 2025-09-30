@@ -4,10 +4,12 @@ import {
   Package, 
   Users, 
   History, 
-  ChevronLeft,
+  ChevronLeft,  
   ChevronRight,
   LogOut,
-  ShoppingCart
+  ShoppingCart,
+  UserPlus,
+  FileText,
 } from 'lucide-react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
@@ -25,6 +27,11 @@ const menuItems = {
     { icon: Package, label: 'จัดการอุปกรณ์', path: '/equipment' },
     { icon: Users, label: 'จัดการสมาชิก', path: '/users' },
     { icon: History, label: 'ประวัติการยืม-คืน', path: '/history' },
+    { icon: UserPlus, label: 'คำขอสมัครสมาชิก', path: '/pending-registrations' },
+    { icon: FileText, label: 'จัดการคำขอยืม', path: '/borrow-requests' },
+
+    
+
   ],
   staff: [
     { icon: LayoutDashboard, label: 'Dashboard', path: '/dashboard' },
@@ -32,6 +39,9 @@ const menuItems = {
     { icon: Package, label: 'จัดการอุปกรณ์', path: '/equipment' },
     { icon: Users, label: 'จัดการสมาชิก', path: '/users' },
     { icon: History, label: 'ประวัติการยืม-คืน', path: '/history' },
+    { icon: UserPlus, label: 'คำขอสมัครสมาชิก', path: '/pending-registrations' },
+    { icon: FileText, label: 'จัดการคำขอยืม', path: '/borrow-requests' },
+
   ],
   user: [
     { icon: LayoutDashboard, label: 'Dashboard', path: '/dashboard' },
@@ -39,6 +49,9 @@ const menuItems = {
     { icon: Package, label: 'จัดการอุปกรณ์', path: '/equipment' },
     { icon: Users, label: 'จัดการสมาชิก', path: '/users' },
     { icon: History, label: 'ประวัติการยืม-คืน', path: '/history' },
+    { icon: UserPlus, label: 'คำขอสมัครสมาชิก', path: '/pending-registrations' },
+    { icon: FileText, label: 'จัดการคำขอยืม', path: '/borrow-requests' },
+
   ],
   guest: [
     { icon: LayoutDashboard, label: 'Dashboard', path: '/dashboard' },
@@ -52,16 +65,12 @@ const menuItems = {
 export const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, onToggle, userRole }) => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const items = menuItems[userRole] || menuItems.user;
 
   const handleLogout = () => {
-    try {
-      localStorage.clear();
-      sessionStorage.clear();
-    } catch (e) {
-      // ignore storage errors
-    }
+    // ใช้ logout จาก AuthContext เพื่อเคลียร์สถานะและ storage อย่างถูกต้อง
+    logout();
     navigate('/login', { replace: true });
   };
 

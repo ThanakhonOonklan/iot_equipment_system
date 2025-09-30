@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Sidebar, SlideInPanel } from "../../components/Layout";
-import { CreateUserForm, EditUserForm } from "../../components/UserForms";
+import { EditUserForm } from "../../components/UserForms";
 import apiService, { User } from "../../services/api";
 import { Card } from "../../components/ui/card";
 import { Trash2, Search, ChevronLeft, ChevronRight } from "lucide-react";
@@ -15,18 +15,7 @@ export const Users: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [users, setUsers] = useState<User[]>([]);
   const [query, setQuery] = useState("");
-  const [showCreate, setShowCreate] = useState(false);
-  const [creating, setCreating] = useState(false);
-  const [form, setForm] = useState({
-    fullname: "",
-    email: "",
-    student_id: "",
-    password: "",
-    confirm_password: "",
-    role: "student",
-    status: "active",
-  });
-  const [formError, setFormError] = useState<string | null>(null);
+  // remove create member flow per requirements
 
   // edit modal state
   const [showEdit, setShowEdit] = useState(false);
@@ -36,7 +25,7 @@ export const Users: React.FC = () => {
     fullname: "",
     email: "",
     student_id: "",
-    role: "student",
+    role: "user",
     status: "active",
   });
   const [editError, setEditError] = useState<string | null>(null);
@@ -119,17 +108,7 @@ export const Users: React.FC = () => {
                 </div>
               </div>
               
-              {/* Add Button */}
-                <button
-                  onClick={() => {
-                    setShowCreate(true);
-                    setFormError(null);
-                  }}
-                className="rounded-md bg-[#0EA5E9] px-3 py-2 text-sm font-medium text-white hover:bg-[#0284C7] flex items-center gap-2"
-              >
-                <span className="text-lg">+</span>
-                เพิ่มสมาชิก
-              </button>
+              {/* Add Button removed */}
             </div>
 
             {/* Pagination Controls */}
@@ -244,7 +223,7 @@ export const Users: React.FC = () => {
                           <span className={`rounded-full px-2 py-1 text-xs font-medium ${
                             u.role === 'admin' 
                               ? 'bg-purple-100 text-purple-700' 
-                              : u.role === 'teacher' 
+                              : u.role === 'staff' 
                               ? 'bg-blue-100 text-blue-700'
                               : 'bg-gray-100 text-gray-700'
                           }`}>
@@ -279,63 +258,7 @@ export const Users: React.FC = () => {
           </div>
         </div>
 
-        {/* Slide-in Panel เพิ่มสมาชิก */}
-        <SlideInPanel
-          isOpen={showCreate}
-          onClose={() => !creating && setShowCreate(false)}
-          title="เพิ่มสมาชิก"
-          width="lg"
-          disableBackdropClick={creating}
-          headerActions={
-            <button
-              type="submit"
-              className="bg-[#0EA5E9] text-white px-4 py-2 rounded-lg hover:bg-[#0284C7] disabled:opacity-50"
-              onClick={async () => {
-                try {
-                  setCreating(true);
-                  setFormError(null);
-                  await apiService.createUser(form);
-                  const usersRes = await apiService.listUsers();
-                  setUsers(usersRes.data.users);
-                  // broadcast user-updated for Sidebar/Auth to refresh
-                  window.dispatchEvent(new Event('user-updated'));
-                  setShowCreate(false);
-                  setForm({
-                    fullname: "",
-                    email: "",
-                    student_id: "",
-                    password: "",
-                    confirm_password: "",
-                    role: "student",
-                    status: "active",
-                  });
-                  
-                  // Show success alert
-                  Swal.fire({
-                    title: 'สำเร็จ!',
-                    text: 'เพิ่มสมาชิกเรียบร้อยแล้ว',
-                    icon: 'success',
-                    confirmButtonText: 'ตกลง',
-                    confirmButtonColor: '#0EA5E9'
-                  });
-                } catch (e: any) {
-                  setFormError(e.message || "เพิ่มสมาชิกไม่สำเร็จ");
-                } finally {
-                  setCreating(false);
-                }
-              }}
-              disabled={creating}
-            >
-              {creating ? "กำลังบันทึก..." : "บันทึก"}
-            </button>
-          }
-        >
-          <CreateUserForm
-            form={form}
-            setForm={setForm}
-            formError={formError}
-          />
-        </SlideInPanel>
+        {/* Create member panel removed */}
 
         {/* Slide-in Panel แก้ไขสมาชิก */}
         <SlideInPanel
@@ -408,6 +331,7 @@ export const Users: React.FC = () => {
                   try {
                     setEditing(true);
                     setEditError(null);
+                    console.log('Sending update data:', editForm); // Debug log
                     await apiService.updateUser(editUser!.id, editForm);
                     const usersRes = await apiService.listUsers();
                     setUsers(usersRes.data.users);
@@ -422,18 +346,25 @@ export const Users: React.FC = () => {
                     confirmButtonColor: '#0EA5E9'
                   });
 
-                  // If the edited user is the current user and status is suspended, logout and redirect
+                  // Broadcast suspension to all tabs if target user was suspended
                   const updated = usersRes.data.users.find((u: User) => u.id === editUser!.id);
-                  if (updated && currentUser && updated.id === currentUser.id && updated.status === 'suspended') {
-                    await Swal.fire({
-                      title: 'บัญชีถูกระงับ',
-                      text: 'ระบบจะออกจากระบบและพาไปหน้าเข้าสู่ระบบ',
-                      icon: 'warning',
-                      confirmButtonText: 'ตกลง',
-                      confirmButtonColor: '#0EA5E9'
-                    });
-                    logout();
-                    navigate('/login');
+                  if (updated && updated.status === 'suspended') {
+                    try {
+                      localStorage.setItem('user-suspended', JSON.stringify({ userId: updated.id, t: Date.now() }));
+                      // clear key to allow re-trigger in future
+                      localStorage.removeItem('user-suspended');
+                    } catch {}
+                    if (currentUser && updated.id === currentUser.id) {
+                      await Swal.fire({
+                        title: 'บัญชีถูกระงับ',
+                        text: 'ระบบจะออกจากระบบและพาไปหน้าเข้าสู่ระบบ',
+                        icon: 'warning',
+                        confirmButtonText: 'ตกลง',
+                        confirmButtonColor: '#0EA5E9'
+                      });
+                      logout();
+                      navigate('/login');
+                    }
                   }
                   } catch (e: any) {
                   setEditError(e.message || "แก้ไขสมาชิกไม่สำเร็จ");

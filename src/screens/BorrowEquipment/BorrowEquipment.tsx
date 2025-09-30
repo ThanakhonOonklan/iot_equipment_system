@@ -309,7 +309,7 @@ export const BorrowEquipment: React.FC = () => {
               <div className="flex items-center justify-between mt-4">
                 <div className="flex items-center gap-4">
                   <span className="text-sm text-gray-600">
-                    แสดง {startIndex + 1}-{Math.min(endIndex, totalItems)} จาก {totalItems} รายการ
+                    {totalItems} รายการ
                   </span>
                   <select
                     value={itemsPerPage}

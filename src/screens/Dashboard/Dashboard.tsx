@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Users, Package, CheckCircle, Activity } from 'lucide-react';
+import { Users, Package, CheckCircle, Activity, UserPlus } from 'lucide-react';
 import { StatsCard } from '../../components/Dashboard/StatsCard';
 import { RecentActivity } from '../../components/Dashboard/RecentActivity';
 import { apiService } from '../../services/api';
@@ -56,6 +56,21 @@ export const Dashboard: React.FC = () => {
     fetchStats();
   }, []);
 
+  // Poll pending registrations for admin
+  const [pending, setPending] = useState<any[]>([]);
+  useEffect(() => {
+    let timer: any;
+    const fetchPending = async () => {
+      try {
+        const res = await apiService.listPendingRegistrations();
+        setPending(res.data.requests);
+      } catch {}
+    };
+    fetchPending();
+    timer = setInterval(fetchPending, 8000);
+    return () => clearInterval(timer);
+  }, []);
+
   return (
     <div className="p-6 space-y-6">
       {/* Header */}
@@ -81,11 +96,11 @@ export const Dashboard: React.FC = () => {
           onClick={() => navigate('/equipment')}
         />
         <StatsCard
-          title="อุปกรณ์พร้อมยืม"
-          value={stats.loading ? "..." : stats.availableEquipment}
-          icon={CheckCircle}
-          color="#059669"
-          onClick={() => navigate('/equipment')}
+          title="คำขอสมัครที่รออนุมัติ"
+          value={pending.length}
+          icon={UserPlus}
+          color="#F59E0B"
+          onClick={() => navigate('/pending-registrations')}
         />
         <StatsCard
           title="อุปกรณ์ถูกยืม"
@@ -175,6 +190,8 @@ export const Dashboard: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Removed inline pending list; use stats card to navigate instead */}
 
       {/* Activity */}
       <div className="grid grid-cols-1 lg:grid-cols-1 gap-6">

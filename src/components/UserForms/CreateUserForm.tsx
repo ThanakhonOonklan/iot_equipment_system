@@ -210,8 +210,8 @@ export const CreateUserForm: React.FC<CreateUserFormProps> = ({
                   setForm({ ...form, role: e.target.value })
                 }
               >
-                <option value="student">นักศึกษา</option>
-                <option value="teacher">อาจารย์</option>
+                <option value="user">ผู้ใช้</option>
+                <option value="staff">อาจารย์/เจ้าหน้าที่</option>
                 <option value="admin">ผู้ดูแลระบบ</option>
               </select>
             </div>

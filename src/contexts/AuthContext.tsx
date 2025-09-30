@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import Swal from 'sweetalert2';
 import { apiService, User } from '../services/api';
 
 interface AuthContextType {
@@ -45,6 +46,34 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     };
 
     checkAuthStatus();
+
+    // cross-tab suspension listener
+    const onStorage = (e: StorageEvent) => {
+      try {
+        if (e.key !== 'user-suspended') return;
+        if (!e.newValue) return;
+        const payload = JSON.parse(e.newValue);
+        if (!payload || !payload.userId) return;
+        const current = apiService.getCurrentUser();
+        if (current && current.id === payload.userId) {
+          apiService.logout();
+          setUser(null);
+          Swal.fire({
+            title: 'บัญชีถูกระงับ',
+            text: 'บัญชีของคุณถูกระงับ โปรดติดต่อเจ้าหน้าที่',
+            icon: 'warning',
+            confirmButtonColor: '#0EA5E9'
+          }).finally(() => {
+            window.location.href = '/login';
+          });
+        }
+      } catch {}
+    };
+
+    window.addEventListener('storage', onStorage);
+    return () => {
+      window.removeEventListener('storage', onStorage);
+    };
   }, []);
 
   const login = async (studentId: string, password: string): Promise<void> => {
@@ -79,8 +108,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       const response = await apiService.register(userData);
       
       if (response.success) {
-        // หลังจากสมัครสำเร็จ สามารถ login อัตโนมัติได้
-        await login(userData.student_id, userData.password);
+        // สมัครสำเร็จ - ไม่ทำการล็อกอินอัตโนมัติ
+        // ปล่อยให้ผู้ใช้ไปล็อกอินด้วยตัวเองที่หน้า Login
       } else {
         throw new Error(response.message);
       }

@@ -1,12 +1,16 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 import { ProtectedRoute } from './components/ProtectedRoute';
+import { AuthGuard } from './components/AuthGuard';
 import { Login } from './screens/Login';
 import { SignUp } from './screens/Register';
 import { Home } from './screens/Home';
 import Equipment from './screens/Equipment';
 import Users from './screens/ManageUsers';
 import { BorrowEquipment } from './screens/BorrowEquipment';
+import PendingRegistrations from './screens/PendingRegistrations';
+import BorrowRequests from './screens/BorrowRequests';
+import History from './screens/History';
 
 function App() {
   return (
@@ -14,8 +18,22 @@ function App() {
       <Router>
         <Routes>
           <Route path="/" element={<Navigate to="/login" replace />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/signup" element={<SignUp />} />
+          <Route 
+            path="/login" 
+            element={
+              <AuthGuard>
+                <Login />
+              </AuthGuard>
+            } 
+          />
+          <Route 
+            path="/signup" 
+            element={
+              <AuthGuard>
+                <SignUp />
+              </AuthGuard>
+            } 
+          />
           <Route 
             path="/dashboard" 
             element={
@@ -45,6 +63,30 @@ function App() {
             element={
               <ProtectedRoute>
                 <BorrowEquipment />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/borrow-requests"
+            element={
+              <ProtectedRoute>
+                <BorrowRequests />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/pending-registrations"
+            element={
+              <ProtectedRoute>
+                <PendingRegistrations />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/history"
+            element={
+              <ProtectedRoute>
+                <History />
               </ProtectedRoute>
             }
           />

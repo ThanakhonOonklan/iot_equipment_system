@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
-import { X, Calendar, Package, User, FileText } from 'lucide-react';
+import React, { useMemo, useState } from 'react';
+import { X, Calendar, Package, FileText } from 'lucide-react';
+import { apiService } from '../services/api';
 
 interface BorrowRequestModalProps {
   isOpen: boolean;
@@ -30,11 +31,29 @@ export const BorrowRequestModal: React.FC<BorrowRequestModalProps> = ({
   selectedItems,
   onSubmit
 }) => {
+  const todayStr = useMemo(() => new Date().toISOString().split('T')[0], []);
+  const maxReturnStr = useMemo(() => {
+    const d = new Date();
+    d.setDate(d.getDate() + 7);
+    return d.toISOString().split('T')[0];
+  }, []);
+
+  const currentUser = apiService.getCurrentUser();
+
   const [formData, setFormData] = useState({
-    borrow_date: '',
+    borrow_date: todayStr,
     return_date: '',
     notes: ''
   });
+
+    const formatThaiDate = (value: string | number | Date) => {
+    const d = new Date(value);
+    if (isNaN(d.getTime())) return '';
+    const day = d.getDate();
+    const month = d.getMonth() + 1;
+    const yearBuddhist = d.getFullYear() + 543;
+    return `${day}/${month}/${yearBuddhist}`;
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -44,8 +63,22 @@ export const BorrowRequestModal: React.FC<BorrowRequestModalProps> = ({
       return;
     }
 
-    if (new Date(formData.borrow_date) >= new Date(formData.return_date)) {
+    // borrow_date must be today
+    if (formData.borrow_date !== todayStr) {
+      alert('วันที่ต้องการยืมต้องเป็นวันปัจจุบันเท่านั้น');
+      return;
+    }
+
+    // return must be after borrow and within 7 days
+    const borrow = new Date(formData.borrow_date);
+    const ret = new Date(formData.return_date);
+    if (borrow >= ret) {
       alert('วันที่คืนต้องมากกว่าวันที่ยืม');
+      return;
+    }
+    const diffDays = Math.ceil((ret.getTime() - borrow.getTime()) / (1000 * 60 * 60 * 24));
+    if (diffDays > 7) {
+      alert('วันที่ต้องการคืนต้องไม่เกิน 7 วันนับจากวันนี้');
       return;
     }
 
@@ -76,15 +109,15 @@ export const BorrowRequestModal: React.FC<BorrowRequestModalProps> = ({
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-xl shadow-xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
         {/* Header */}
-        <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white p-6">
+        <div className="bg-white border-b p-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
-              <FileText className="w-6 h-6" />
-              <h2 className="text-xl font-bold">รายการยืม-คืนอุปกรณ์</h2>
+              <FileText className="w-6 h-6 text-[#0ea5e9]" />
+              <h2 className="text-2xl font-bold text-gray-900">ใบยืมสิ่งของ</h2>
             </div>
             <button
               onClick={onClose}
-              className="text-white hover:bg-white hover:bg-opacity-20 rounded-full p-2 transition-colors"
+              className="text-gray-600 hover:bg-gray-100 rounded-full p-2 transition-colors"
             >
               <X className="w-5 h-5" />
             </button>
@@ -93,52 +126,47 @@ export const BorrowRequestModal: React.FC<BorrowRequestModalProps> = ({
 
         <div className="p-6 overflow-y-auto max-h-[calc(90vh-120px)]">
           <form onSubmit={handleSubmit}>
-            {/* ข้อมูลผู้ยืม */}
-            <div className="mb-6">
-              <div className="flex items-center space-x-2 mb-3">
-                <User className="w-5 h-5 text-blue-600" />
-                <h3 className="text-lg font-semibold text-gray-800">ข้อมูลผู้ยืม</h3>
-              </div>
-              <div className="bg-gray-50 rounded-lg p-4">
-                <p className="text-gray-600">ชื่อ: <span className="font-medium text-gray-800">ผู้ใช้ระบบ</span></p>
-                <p className="text-gray-600">วันที่ส่งคำขอ: <span className="font-medium text-gray-800">{new Date().toLocaleDateString('th-TH')}</span></p>
-              </div>
-            </div>
-
-            {/* วันที่ยืม-คืน */}
-            <div className="mb-6">
-              <div className="flex items-center space-x-2 mb-3">
-                <Calendar className="w-5 h-5 text-blue-600" />
-                <h3 className="text-lg font-semibold text-gray-800">กำหนดการยืม-คืน</h3>
-              </div>
+            {/* ใบคำขอ - ส่วนหัวตามแบบฟอร์ม */}
+            <div className="border rounded-xl p-5 mb-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    วันที่ต้องการยืม *
-                  </label>
-                  <input
-                    type="date"
-                    name="borrow_date"
-                    value={formData.borrow_date}
-                    onChange={handleInputChange}
-                    min={new Date().toISOString().split('T')[0]}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    required
-                  />
+                <div className="space-y-2">
+                  <div className="text-gray-700">วันที่: <span className="font-medium">{formatThaiDate(new Date())}</span></div>
+                  <div className="text-gray-700">นามผู้ยืม: <span className="font-medium">{currentUser?.fullname || 'ผู้ใช้ระบบ'}</span></div>
+                  <div className="text-gray-700">รหัสประจำตัว: <span className="font-medium">{currentUser?.student_id || '-'}</span></div>
+                  <div className="text-gray-700">วันที่ส่งคำขอ: <span className="font-medium">{formatThaiDate(new Date())}</span></div>
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    วันที่ต้องการคืน *
-                  </label>
-                  <input
-                    type="date"
-                    name="return_date"
-                    value={formData.return_date}
-                    onChange={handleInputChange}
-                    min={formData.borrow_date || new Date().toISOString().split('T')[0]}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    required
-                  />
+                <div className="space-y-2">
+                  <div className="flex items-center space-x-2">
+                    <Calendar className="w-4 h-4 text-[#0ea5e9]" />
+                    <span className="text-gray-700">วันที่ต้องการยืม:</span>
+                    <input
+                      type="date"
+                      name="borrow_date"
+                      value={formData.borrow_date}
+                      onChange={handleInputChange}
+                      min={todayStr}
+                      max={todayStr}
+                      disabled
+                      title="กำหนดให้ยืมได้เฉพาะวันนี้"
+                      className="ml-2 px-3 py-2 border border-gray-300 rounded-lg bg-gray-100 text-gray-600 cursor-not-allowed shadow-sm"
+                      required
+                    />
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Calendar className="w-4 h-4 text-[#0ea5e9]" />
+                    <span className="text-gray-700">วันที่ต้องการคืน:</span>
+                    <input
+                      type="date"
+                      name="return_date"
+                      value={formData.return_date}
+                      onChange={handleInputChange}
+                      min={todayStr}
+                      max={maxReturnStr}
+                      className="ml-2 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent hover:border-blue-400 transition-colors shadow-sm"
+                      required
+                    />
+                    <span className="text-xs text-gray-500 ml-2">คืนได้ไม่เกิน 7 วัน</span>
+                  </div>
                 </div>
               </div>
             </div>
@@ -146,7 +174,7 @@ export const BorrowRequestModal: React.FC<BorrowRequestModalProps> = ({
             {/* รายการอุปกรณ์ */}
             <div className="mb-6">
               <div className="flex items-center space-x-2 mb-3">
-                <Package className="w-5 h-5 text-blue-600" />
+                <Package className="w-5 h-5 text-[#0ea5e9]" />
                 <h3 className="text-lg font-semibold text-gray-800">รายการอุปกรณ์ที่เลือก ({totalItems} ชิ้น)</h3>
               </div>
               
@@ -155,16 +183,17 @@ export const BorrowRequestModal: React.FC<BorrowRequestModalProps> = ({
                   <table className="w-full">
                     <thead className="bg-gray-100">
                       <tr>
+                        <th className="px-4 py-3 text-center text-sm font-medium text-gray-700 w-16">ลำดับ</th>
                         <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">รูปภาพ</th>
                         <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">ชื่ออุปกรณ์</th>
                         <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">หมวดหมู่</th>
-                        <th className="px-4 py-3 text-center text-sm font-medium text-gray-700">จำนวนที่เลือก</th>
-                        <th className="px-4 py-3 text-center text-sm font-medium text-gray-700">คงเหลือ</th>
+                        <th className="px-4 py-3 text-center text-sm font-medium text-gray-700 w-24">จำนวน</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-200">
-                      {selectedItems.map((item) => (
+                      {selectedItems.map((item, idx) => (
                         <tr key={item.id} className="hover:bg-gray-50">
+                          <td className="px-4 py-3 text-center text-sm text-gray-700">{idx + 1}</td>
                           <td className="px-4 py-3">
                             <div className="w-12 h-12 bg-gray-200 rounded-lg flex items-center justify-center overflow-hidden">
                               {item.image_url ? (
@@ -196,9 +225,6 @@ export const BorrowRequestModal: React.FC<BorrowRequestModalProps> = ({
                               {item.selected_quantity}
                             </span>
                           </td>
-                          <td className="px-4 py-3 text-center">
-                            <span className="text-sm text-gray-600">{item.quantity_available}</span>
-                          </td>
                         </tr>
                       ))}
                     </tbody>
@@ -217,7 +243,7 @@ export const BorrowRequestModal: React.FC<BorrowRequestModalProps> = ({
                 value={formData.notes}
                 onChange={handleInputChange}
                 rows={3}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0ea5e9] focus:border-transparent"
                 placeholder="ระบุรายละเอียดเพิ่มเติม (ถ้ามี)..."
               />
             </div>
@@ -233,7 +259,7 @@ export const BorrowRequestModal: React.FC<BorrowRequestModalProps> = ({
               </button>
               <button
                 type="submit"
-                className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                className="px-6 py-2 bg-[#0ea5e9] text-white rounded-lg hover:bg-blue-700 transition-colors"
               >
                 ส่งคำขอยืม
               </button>

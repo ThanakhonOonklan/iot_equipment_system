@@ -6,6 +6,8 @@ import { Input } from "../../components/ui/input";
 import { Label } from "../../components/ui/label";
 import { Eye, EyeOff, User, Mail, IdCard, Lock, Loader2 } from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
+import apiService from "../../services/api";
+import Swal from 'sweetalert2';
 
 const formFields = [
   {
@@ -51,7 +53,7 @@ export const SignUp = (): JSX.Element => {
   const [errors, setErrors] = useState<{ [key: string]: string | undefined }>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   
-  const { register } = useAuth();
+  const { register: _unusedRegister } = useAuth();
   const navigate = useNavigate();
 
 
@@ -153,17 +155,24 @@ export const SignUp = (): JSX.Element => {
         return;
       }
       
-      // Call register API
-      await register({
+      // ส่งคำขอสมัครไปยัง pending_registrations (ไม่สร้างผู้ใช้จริง)
+      await apiService.createPendingRegistration({
         fullname: formData.fullname,
         email: formData.email,
         student_id: formData.studentId,
         password: formData.password,
-        confirm_password: formData.confirmPassword
+        role: 'user'
       });
-      
-      // Redirect to dashboard on success
-      navigate('/dashboard');
+
+      // แจ้งเตือนและไปหน้า login
+      await Swal.fire({
+        title: 'สมัครสมาชิกสำเร็จ',
+        text: 'โปรดรอเจ้าหน้าที่อนุมัติ ก่อนเข้าสู่ระบบ',
+        icon: 'success',
+        confirmButtonText: 'ไปหน้าเข้าสู่ระบบ',
+        confirmButtonColor: '#0EA5E9'
+      });
+      navigate('/login', { replace: true });
       
     } catch (error: any) {
       console.error('Register error:', error);

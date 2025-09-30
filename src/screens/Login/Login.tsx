@@ -5,18 +5,22 @@ import { Card, CardContent } from "../../components/ui/card";
 import { Input } from "../../components/ui/input";
 import { Label } from "../../components/ui/label";
 import { User, Lock, Loader2 } from "lucide-react";
+import Swal from 'sweetalert2';
 import { useAuth } from "../../contexts/AuthContext";
 
 export const Login = (): JSX.Element => {
-  const [formData, setFormData] = useState<{ studentId: string; password: string }>(
-    { studentId: "", password: "" }
-  );
-  const [errors, setErrors] = useState<{ studentId?: string; general?: string }>({});
+  const [formData, setFormData] = useState<{
+    studentId: string;
+    password: string;
+  }>({ studentId: "", password: "" });
+  const [errors, setErrors] = useState<{
+    studentId?: string;
+    general?: string;
+  }>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
-  
+
   const { login } = useAuth();
   const navigate = useNavigate();
-
 
   const validateStudentId = (studentId: string): boolean => {
     const pattern = /^s\d{13}$/;
@@ -24,13 +28,16 @@ export const Login = (): JSX.Element => {
   };
 
   const handleChange = (field: "studentId" | "password", value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-    
+    setFormData((prev) => ({ ...prev, [field]: value }));
+
     if (field === "studentId") {
       if (value && !validateStudentId(value)) {
-        setErrors(prev => ({ ...prev, studentId: "รูปแบบรหัสนักศึกษาไม่ถูกต้อง (s + รหัส 13 หลัก)" }));
+        setErrors((prev) => ({
+          ...prev,
+          studentId: "รูปแบบรหัสนักศึกษาไม่ถูกต้อง (s + รหัส 13 หลัก)",
+        }));
       } else {
-        setErrors(prev => ({ ...prev, studentId: undefined }));
+        setErrors((prev) => ({ ...prev, studentId: undefined }));
       }
     }
   };
@@ -39,39 +46,55 @@ export const Login = (): JSX.Element => {
     e.preventDefault();
     setIsSubmitting(true);
     setErrors({});
-    
+
     try {
       // Validate before submit
       if (!validateStudentId(formData.studentId)) {
-        setErrors(prev => ({ ...prev, studentId: "รูปแบบรหัสนักศึกษาไม่ถูกต้อง (s + รหัส 13 หลัก)" }));
+        setErrors((prev) => ({
+          ...prev,
+          studentId: "รูปแบบรหัสนักศึกษาไม่ถูกต้อง (s + รหัส 13 หลัก)",
+        }));
         return;
       }
-      
+
       if (!formData.password) {
-        setErrors(prev => ({ ...prev, general: "กรุณากรอกรหัสผ่าน" }));
+        setErrors((prev) => ({ ...prev, general: "กรุณากรอกรหัสผ่าน" }));
         return;
       }
-      
+
       // Call login API
-      await login(formData.studentId, formData.password);
-      
+      try {
+        await login(formData.studentId, formData.password);
+      } catch (err: any) {
+        if (err && typeof err.status === 'number' && err.status === 403) {
+          await Swal.fire({
+            title: 'บัญชีถูกระงับ',
+            text: 'บัญชีของคุณถูกระงับ โปรดติดต่อเจ้าหน้าที่',
+            icon: 'warning',
+            confirmButtonColor: '#0EA5E9'
+          });
+          return;
+        }
+        throw err;
+      }
+
       // Redirect to dashboard on success
-      navigate('/dashboard');
-      
+      navigate("/dashboard");
     } catch (error: any) {
-      console.error('Login error:', error);
-      
+      console.error("Login error:", error);
+
       // จัดการข้อความ error ตามสถานการณ์
       let errorMessage = error.message || "เกิดข้อผิดพลาดในการเข้าสู่ระบบ";
-      
+
       // ถ้าเป็น network error
-      if (error.message === 'Failed to fetch') {
-        errorMessage = "ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้ กรุณาตรวจสอบการเชื่อมต่ออินเทอร์เน็ต";
+      if (error.message === "Failed to fetch") {
+        errorMessage =
+          "ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้ กรุณาตรวจสอบการเชื่อมต่ออินเทอร์เน็ต";
       }
-      
-      setErrors(prev => ({ 
-        ...prev, 
-        general: errorMessage
+
+      setErrors((prev) => ({
+        ...prev,
+        general: errorMessage,
       }));
     } finally {
       setIsSubmitting(false);
@@ -81,12 +104,11 @@ export const Login = (): JSX.Element => {
   return (
     <div className="min-h-screen bg-white flex items-center justify-center p-3">
       <div className="w-full max-w-4xl flex items-center justify-between gap-8">
-       
         <div className="hidden lg:flex flex-col items-center justify-center flex-1 space-y-6">
           <div className="relative">
-            <img 
-              src="/images/logo.png" 
-              alt="IoT System Logo" 
+            <img
+              src="/images/logo.png"
+              alt="IoT System Logo"
               className="w-64 h-64 object-contain"
             />
           </div>
@@ -101,23 +123,24 @@ export const Login = (): JSX.Element => {
           </div>
         </div>
 
-     
         <div className="w-full max-w-sm">
           <Card className="bg-white/80 backdrop-blur-sm shadow-xl border-0 rounded-xl overflow-hidden">
             <CardContent className="p-6">
               <div className="text-center mb-6">
-                <h2 className="text-2xl font-bold text-gray-700 mb-1">เข้าสู่ระบบ</h2>
-                <p className="text-gray-600 text-sm">กรอกรหัสนักศึกษาและรหัสผ่านของคุณ</p>
+                <h2 className="text-2xl font-bold text-gray-700 mb-1">
+                  เข้าสู่ระบบ
+                </h2>
+                <p className="text-gray-600 text-sm">
+                  กรอกรหัสนักศึกษาและรหัสผ่านของคุณ
+                </p>
               </div>
 
-              <form 
-                className="space-y-5" 
-                onSubmit={handleSubmit}
-              >
-                <div 
-                  className="space-y-1.5"
-                >
-                  <Label htmlFor="studentId" className="text-xs font-semibold text-gray-700 flex items-center gap-2">
+              <form className="space-y-5" onSubmit={handleSubmit}>
+                <div className="space-y-1.5">
+                  <Label
+                    htmlFor="studentId"
+                    className="text-xs font-semibold text-gray-700 flex items-center gap-2"
+                  >
                     <User className="w-4 h-4 text-[#0EA5E9]" /> รหัสนักศึกษา
                   </Label>
                   <Input
@@ -125,22 +148,25 @@ export const Login = (): JSX.Element => {
                     type="text"
                     placeholder="s6706021410192"
                     value={formData.studentId}
-                    onChange={e => handleChange("studentId", e.target.value)}
+                    onChange={(e) => handleChange("studentId", e.target.value)}
                     className={`w-full h-10 pl-3 pr-3 bg-white border rounded-lg focus:ring-0 transition-colors duration-200 placeholder:text-gray-400 ${
-                      errors.studentId 
-                        ? 'border-red-500 focus:border-red-500' 
-                        : 'border-gray-300 focus:border-[#0EA5E9]'
+                      errors.studentId
+                        ? "border-red-500 focus:border-red-500"
+                        : "border-gray-300 focus:border-[#0EA5E9]"
                     }`}
                   />
                   {errors.studentId && (
-                    <p className="text-red-500 text-xs mt-1">{errors.studentId}</p>
+                    <p className="text-red-500 text-xs mt-1">
+                      {errors.studentId}
+                    </p>
                   )}
                 </div>
 
-                <div 
-                  className="space-y-1.5"
-                >
-                  <Label htmlFor="password" className="text-xs font-semibold text-gray-700 flex items-center gap-2">
+                <div className="space-y-1.5">
+                  <Label
+                    htmlFor="password"
+                    className="text-xs font-semibold text-gray-700 flex items-center gap-2"
+                  >
                     <Lock className="w-4 h-4 text-[#0EA5E9]" /> รหัสผ่าน
                   </Label>
                   <Input
@@ -148,7 +174,7 @@ export const Login = (): JSX.Element => {
                     type="password"
                     placeholder="กรอกรหัสผ่าน"
                     value={formData.password}
-                    onChange={e => handleChange("password", e.target.value)}
+                    onChange={(e) => handleChange("password", e.target.value)}
                     className="w-full h-10 pl-3 pr-3 bg-white border border-gray-300 rounded-lg focus:border-[#0EA5E9] focus:ring-0 transition-colors duration-200 placeholder:text-gray-400"
                   />
                 </div>
@@ -179,14 +205,12 @@ export const Login = (): JSX.Element => {
                         กำลังเข้าสู่ระบบ...
                       </>
                     ) : (
-                      'เข้าสู่ระบบ'
+                      "เข้าสู่ระบบ"
                     )}
                   </Button>
                 </div>
 
-                <div 
-                  className="flex items-center justify-center space-x-2 text-xs text-gray-600 pt-3"
-                >
+                <div className="flex items-center justify-center space-x-2 text-xs text-gray-600 pt-3">
                   <span>ยังไม่มีบัญชี?</span>
                   <Link
                     to="/signup"

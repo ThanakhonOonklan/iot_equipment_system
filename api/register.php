@@ -106,9 +106,9 @@ try {
     // Hash รหัสผ่าน
     $hashed_password = Security::hashPassword($password);
     
-    // เพิ่มผู้ใช้ใหม่
+    // เพิ่มผู้ใช้ใหม่ (กำหนดบทบาทเริ่มต้นเป็น user)
     $insert_query = "INSERT INTO users (student_id, email, fullname, password, role, status) 
-                     VALUES (:student_id, :email, :fullname, :password, 'student', 'active')";
+                     VALUES (:student_id, :email, :fullname, :password, 'user', 'active')";
     
     $insert_stmt = $conn->prepare($insert_query);
     $insert_stmt->bindParam(':student_id', $student_id, PDO::PARAM_STR);
