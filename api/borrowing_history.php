@@ -38,29 +38,103 @@ try {
 }
 
 function listHistory(PDO $conn) {
+  // ดึงข้อมูลประวัติการยืม-คืนแบบใหม่ - แยกตามคำขอที่ต่างกัน
   $stmt = $conn->prepare("
     SELECT 
-      bh.id,
-      bh.action,
-      bh.action_date,
-      bh.notes,
+      b.user_id,
       u.fullname as user_fullname,
       u.student_id as user_student_id,
-      COALESCE(bh.equipment_names, e.name) as equipment_name,
-      e.category,
-      COALESCE(bh.approver_name, approver.fullname) as approver_name,
-      COUNT(DISTINCT e.id) as equipment_count
-    FROM borrowing_history bh
-    LEFT JOIN users u ON bh.user_id = u.id
-    LEFT JOIN equipment e ON bh.equipment_id = e.id
+      b.borrow_date,
+      b.due_date,
+      b.return_date,
+      b.status,
+      b.notes,
+      COUNT(b.id) as borrowing_count,
+      COUNT(DISTINCT e.id) as equipment_count,
+      GROUP_CONCAT(DISTINCT e.name ORDER BY e.name SEPARATOR ', ') as equipment_names,
+      GROUP_CONCAT(DISTINCT e.category ORDER BY e.category SEPARATOR ', ') as categories,
+      COALESCE(approver.fullname, 'ระบบ') as approver_name,
+      MIN(b.id) as borrowing_id
+    FROM borrowing b
+    LEFT JOIN users u ON b.user_id = u.id
+    LEFT JOIN equipment e ON b.equipment_id = e.id
+    LEFT JOIN borrowing_history bh ON b.id = bh.borrowing_id AND bh.action = 'borrow'
     LEFT JOIN users approver ON bh.approver_id = approver.id
-    WHERE bh.action IN ('borrow', 'return', 'approve')
-    GROUP BY bh.id
-    ORDER BY bh.action_date DESC
+    GROUP BY b.user_id, b.borrow_date, b.due_date, b.status, b.notes, approver.fullname
+    ORDER BY b.borrow_date DESC, b.user_id
   ");
   $stmt->execute();
   $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
-  Response::success('OK', ['history' => $rows]);
+  
+  // ดึงรายละเอียดอุปกรณ์สำหรับแต่ละรายการ
+  $finalRows = [];
+  foreach ($rows as $row) {
+    // ดึงรายละเอียดอุปกรณ์สำหรับรายการนี้
+    $equipmentStmt = $conn->prepare("
+      SELECT 
+        e.name,
+        COUNT(b.id) as quantity
+      FROM borrowing b
+      JOIN equipment e ON b.equipment_id = e.id
+      WHERE b.user_id = ? 
+        AND b.borrow_date = ?
+        AND b.due_date = ?
+        AND b.status = ?
+        AND b.notes = ?
+      GROUP BY e.id, e.name
+      ORDER BY e.name
+    ");
+    $equipmentStmt->execute([
+      $row['user_id'], 
+      $row['borrow_date'], 
+      $row['due_date'], 
+      $row['status'], 
+      $row['notes']
+    ]);
+    $equipmentDetails = $equipmentStmt->fetchAll(PDO::FETCH_ASSOC);
+    
+    // ดึงเวลาที่ส่งคำขอยืมจาก borrow_requests
+    $requestTimeStmt = $conn->prepare("
+      SELECT br.request_date
+      FROM borrow_requests br
+      JOIN borrow_request_items bri ON br.id = bri.request_id
+      JOIN borrowing b ON bri.equipment_id = b.equipment_id
+      WHERE b.user_id = ? 
+        AND DATE(b.borrow_date) = DATE(?)
+        AND DATE(b.due_date) = DATE(?)
+        AND b.status = ?
+        AND b.notes = ?
+      ORDER BY br.request_date DESC
+      LIMIT 1
+    ");
+    $requestTimeStmt->execute([
+      $row['user_id'], 
+      $row['borrow_date'], 
+      $row['due_date'], 
+      $row['status'], 
+      $row['notes']
+    ]);
+    $requestTime = $requestTimeStmt->fetch(PDO::FETCH_ASSOC);
+    
+    // สร้างรายการอุปกรณ์
+    $equipmentList = [];
+    foreach ($equipmentDetails as $equipment) {
+      $equipmentList[] = $equipment['name'] . ' (' . $equipment['quantity'] . ' ชิ้น)';
+    }
+    
+    $row['equipment_details'] = $equipmentList;
+    
+    // ใช้เวลาที่ส่งคำขอแทนเวลา 00:00
+    if ($requestTime && $requestTime['request_date']) {
+      $row['request_time'] = $requestTime['request_date'];
+    } else {
+      $row['request_time'] = $row['borrow_date'];
+    }
+    
+    $finalRows[] = $row;
+  }
+  
+  Response::success('OK', ['history' => $finalRows]);
 }
 
 function getUserHistory(PDO $conn, int $userId) {

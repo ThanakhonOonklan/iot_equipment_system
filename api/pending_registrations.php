@@ -165,11 +165,10 @@ function updatePending(PDO $conn, array $input) {
     $del->execute();
     Response::success('อนุมัติคำขอสำเร็จ');
   } elseif ($action === 'reject') {
-    $upd = $conn->prepare("UPDATE pending_registrations SET status = 'rejected', reviewed_at = NOW(), notes = :notes WHERE id = :id");
-    $notes = isset($input['notes']) ? Security::sanitize($input['notes']) : null;
-    $upd->bindParam(':notes', $notes, PDO::PARAM_STR);
-    $upd->bindParam(':id', $id, PDO::PARAM_INT);
-    if (!$upd->execute()) {
+    // ลบคำขอออกจากฐานข้อมูลเลย ไม่ต้องเก็บไว้
+    $del = $conn->prepare('DELETE FROM pending_registrations WHERE id = :id');
+    $del->bindParam(':id', $id, PDO::PARAM_INT);
+    if (!$del->execute()) {
       Response::error('ไม่สามารถปฏิเสธได้', 500);
     }
     Response::success('ปฏิเสธคำขอสำเร็จ');

@@ -4,16 +4,22 @@ import { apiService } from '../../services/api';
 import { Search, User, Package, CheckCircle, ChevronDown, ChevronRight } from 'lucide-react';
 
 interface HistoryEntry {
-  id: number;
+  borrowing_id: number;
   user_id: number;
   user_fullname: string;
   user_student_id: string;
-  equipment_name: string;
-  category: string;
-  action: 'borrow' | 'return' | 'extend' | 'lost' | 'approve';
-  action_date: string;
-  approver_name?: string;
+  borrow_date: string;
+  due_date: string;
+  return_date?: string;
+  status: string;
+  notes?: string;
+  borrowing_count: number;
   equipment_count: number;
+  equipment_names: string;
+  equipment_details: string[];
+  categories: string;
+  approver_name: string;
+  request_time?: string;
 }
 
 const formatThaiDateTime = (value: string | number | Date) => {
@@ -57,7 +63,7 @@ export const History: React.FC = () => {
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     if (!q) return entries;
-    return entries.filter(e => [e.user_fullname, e.user_student_id, e.equipment_name, e.approver_name].some(v => String(v ?? '').toLowerCase().includes(q)));
+    return entries.filter(e => [e.user_fullname, e.user_student_id, e.equipment_names, e.approver_name].some(v => String(v ?? '').toLowerCase().includes(q)));
   }, [entries, query]);
 
   return (
@@ -85,11 +91,11 @@ export const History: React.FC = () => {
             ) : (
               <div className="space-y-3">
                 {filtered.map(h => {
-                  const isOpen = expandedId === h.id;
+                  const isOpen = expandedId === h.borrowing_id;
                   return (
-                    <div key={h.id} className="bg-white border rounded-xl">
+                    <div key={h.borrowing_id} className="bg-white border rounded-xl">
                       {/* Handle */}
-                      <div className="flex items-center justify-between p-4 cursor-pointer" onClick={() => setExpandedId(isOpen ? null : h.id)}>
+                      <div className="flex items-center justify-between p-4 cursor-pointer" onClick={() => setExpandedId(isOpen ? null : h.borrowing_id)}>
                         <div className="flex items-center gap-3">
                           {isOpen ? <ChevronDown className="w-5 h-5 text-gray-500" /> : <ChevronRight className="w-5 h-5 text-gray-500" />}
                           <div>
@@ -98,21 +104,21 @@ export const History: React.FC = () => {
                             </div>
                             <div className="text-xs text-gray-500">
                               <span className="inline-flex items-center gap-1">
-                                <Package className="w-3 h-3" /> {h.equipment_name}
+                                <Package className="w-3 h-3" /> มีอุปกรณ์ที่ยืม {h.equipment_count} รายการ ({h.borrowing_count} ชิ้น)
                               </span>
                               <span className="mx-2">•</span>
                               <span className="inline-flex items-center gap-1">
                                 <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-700">
-                                  <CheckCircle className="w-3 h-3 mr-1" /> {h.action}
+                                  <CheckCircle className="w-3 h-3 mr-1" /> borrow
                                 </span>
                               </span>
                               <span className="mx-2">•</span>
-                              {formatThaiDateTime(h.action_date)}
+                              {formatThaiDateTime(h.request_time || h.borrow_date)}
                             </div>
                           </div>
                         </div>
                         <div>
-                          <span className="text-sm text-gray-600">อนุมัติโดย: {h.approver_name || '-'}</span>
+                          <span className="text-sm text-gray-600">อนุมัติโดย: {h.approver_name}</span>
                         </div>
                       </div>
 
@@ -125,22 +131,43 @@ export const History: React.FC = () => {
                               <div>
                                 <dt className="text-sm font-medium text-gray-500">อุปกรณ์ที่ยืม</dt>
                                 <dd className="mt-1 text-sm text-gray-900">
-                                  {h.equipment_name}
-                                  {h.equipment_count > 1 && ` และอีก ${h.equipment_count - 1} รายการ`}
+                                  {h.equipment_details && h.equipment_details.length > 0 ? (
+                                    <ol className="list-decimal list-inside space-y-1">
+                                      {h.equipment_details.map((equipment, index) => (
+                                        <li key={index} className="text-gray-900">
+                                          {equipment}
+                                        </li>
+                                      ))}
+                                    </ol>
+                                  ) : (
+                                    <span className="text-gray-500">ไม่มีข้อมูลอุปกรณ์</span>
+                                  )}
                                 </dd>
                               </div>
                               <div>
                                 <dt className="text-sm font-medium text-gray-500">อนุมัติโดย</dt>
-                                <dd className="mt-1 text-sm text-gray-900">{h.approver_name || '-'}</dd>
+                                <dd className="mt-1 text-sm text-gray-900">{h.approver_name}</dd>
                               </div>
                               <div>
                                 <dt className="text-sm font-medium text-gray-500">วันที่ยืม</dt>
-                                <dd className="mt-1 text-sm text-gray-900">{formatThaiDateTime(h.action_date)}</dd>
+                                <dd className="mt-1 text-sm text-gray-900">{formatThaiDateTime(h.borrow_date).split(' ')[0]}</dd>
+                              </div>
+                              <div>
+                                <dt className="text-sm font-medium text-gray-500">วันที่ครบกำหนด</dt>
+                                <dd className="mt-1 text-sm text-gray-900">{formatThaiDateTime(h.due_date).split(' ')[0]}</dd>
                               </div>
                               <div>
                                 <dt className="text-sm font-medium text-gray-500">สถานะ</dt>
-                                <dd className="mt-1 text-sm text-gray-900">{h.action === 'return' ? 'คืนแล้ว' : 'กำลังยืม'}</dd>
+                                <dd className="mt-1 text-sm text-gray-900">
+                                  {h.status === 'returned' ? 'คืนแล้ว' : h.status === 'overdue' ? 'เกินกำหนด' : 'กำลังยืม'}
+                                </dd>
                               </div>
+                              {h.return_date && (
+                                <div>
+                                  <dt className="text-sm font-medium text-gray-500">วันที่คืน</dt>
+                                  <dd className="mt-1 text-sm text-gray-900">{formatThaiDateTime(h.return_date)}</dd>
+                                </div>
+                              )}
                             </dl>
                           </div>
                         </div>

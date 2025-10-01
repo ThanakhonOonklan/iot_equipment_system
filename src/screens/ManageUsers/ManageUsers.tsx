@@ -21,7 +21,7 @@ export const Users: React.FC = () => {
   const [showEdit, setShowEdit] = useState(false);
   const [editing, setEditing] = useState(false);
   const [editUser, setEditUser] = useState<User | null>(null);
-  const [editForm, setEditForm] = useState({
+  const [editForm, setEditForm] = useState({  
     fullname: "",
     email: "",
     student_id: "",
@@ -33,7 +33,7 @@ export const Users: React.FC = () => {
   const navigate = useNavigate();
   
   // Pagination state
-  const [itemsPerPage, setItemsPerPage] = useState(5);
+  const [itemsPerPage, setItemsPerPage] = useState(50);
   const [currentPage, setCurrentPage] = useState(1);
 
   const toggleSidebar = () => setSidebarCollapsed((v) => !v);

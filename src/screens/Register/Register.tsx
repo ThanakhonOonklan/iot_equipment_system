@@ -5,7 +5,6 @@ import { Card, CardContent } from "../../components/ui/card";
 import { Input } from "../../components/ui/input";
 import { Label } from "../../components/ui/label";
 import { Eye, EyeOff, User, Mail, IdCard, Lock, Loader2 } from "lucide-react";
-import { useAuth } from "../../contexts/AuthContext";
 import apiService from "../../services/api";
 import Swal from 'sweetalert2';
 
@@ -53,7 +52,6 @@ export const SignUp = (): JSX.Element => {
   const [errors, setErrors] = useState<{ [key: string]: string | undefined }>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   
-  const { register: _unusedRegister } = useAuth();
   const navigate = useNavigate();
 
 

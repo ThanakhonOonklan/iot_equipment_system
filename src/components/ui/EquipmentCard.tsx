@@ -1,7 +1,7 @@
 import React from "react";
 import { cn } from "../../lib/utils";
 
-export type EquipmentStatus = "available" | "unavailable" | "maintenance" | "limited";
+export type EquipmentStatus = "available" | "unavailable" | "limited";
 
 export interface EquipmentCardProps {
   name: string;
@@ -18,7 +18,6 @@ const statusMap: Record<EquipmentStatus, { label: string; color: string; dot: st
   available: { label: "พร้อมยืม", color: "text-emerald-700 bg-emerald-50", dot: "bg-emerald-500" },
   limited: { label: "เหลือน้อย", color: "text-amber-700 bg-amber-50", dot: "bg-amber-500" },
   unavailable: { label: "ไม่พร้อมยืม", color: "text-rose-700 bg-rose-50", dot: "bg-rose-500" },
-  maintenance: { label: "ซ่อมบำรุง", color: "text-sky-700 bg-sky-50", dot: "bg-sky-500" },
 };
 
 export const EquipmentCard: React.FC<EquipmentCardProps> = ({

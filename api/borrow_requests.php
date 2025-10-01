@@ -169,19 +169,108 @@ function updateBorrowRequest($conn, $input) {
             }
         }
         
-        // Update request status
-        $upd = $conn->prepare('UPDATE borrow_requests SET status = :status, approver_id = :approver_id, approver_name = :approver_name, approved_at = NOW() WHERE id = :id');
-        $status = 'approved';
-        $upd->bindParam(':status', $status, PDO::PARAM_STR);
-        $upd->bindParam(':approver_id', $approver_id, PDO::PARAM_INT);
-        $upd->bindParam(':approver_name', $approver_name, PDO::PARAM_STR);
-        $upd->bindParam(':id', $id, PDO::PARAM_INT);
+        // Start transaction for approve process
+        $conn->beginTransaction();
         
-        if (!$upd->execute()) {
-            Response::error('ไม่สามารถอนุมัติคำขอได้', 500);
-        }
+        try {
+            // Get request details
+            $requestStmt = $conn->prepare('SELECT * FROM borrow_requests WHERE id = ?');
+            $requestStmt->execute([$id]);
+            $request = $requestStmt->fetch(PDO::FETCH_ASSOC);
             
-        Response::success('อนุมัติคำขอสำเร็จ');
+            if (!$request) {
+                throw new Exception('ไม่พบคำขอยืม');
+            }
+            
+            // Get request items
+            $itemsStmt = $conn->prepare('SELECT * FROM borrow_request_items WHERE request_id = ?');
+            $itemsStmt->execute([$id]);
+            $items = $itemsStmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            // Check equipment availability and create borrowing records
+            foreach ($items as $item) {
+                // Check if equipment has enough quantity
+                $equipmentStmt = $conn->prepare('SELECT quantity_available FROM equipment WHERE id = ?');
+                $equipmentStmt->execute([$item['equipment_id']]);
+                $equipment = $equipmentStmt->fetch(PDO::FETCH_ASSOC);
+                
+                if (!$equipment || $equipment['quantity_available'] < $item['quantity_requested']) {
+                    throw new Exception('อุปกรณ์ ID ' . $item['equipment_id'] . ' ไม่เพียงพอ');
+                }
+                
+                // Create borrowing record for each item
+                for ($i = 0; $i < $item['quantity_requested']; $i++) {
+                    $borrowingStmt = $conn->prepare('
+                        INSERT INTO borrowing (user_id, equipment_id, borrow_date, due_date, notes) 
+                        VALUES (?, ?, ?, ?, ?)
+                    ');
+                    $borrowingStmt->execute([
+                        $request['user_id'],
+                        $item['equipment_id'],
+                        $request['borrow_date'],
+                        $request['return_date'],
+                        'อนุมัติโดย: ' . $approver_name
+                    ]);
+                    
+                    $borrowingId = $conn->lastInsertId();
+                    
+                    // Create borrowing history record
+                    $historyStmt = $conn->prepare('
+                        INSERT INTO borrowing_history (borrowing_id, user_id, equipment_id, action, action_date, notes, approver_id, approver_name) 
+                        VALUES (?, ?, ?, ?, NOW(), ?, ?, ?)
+                    ');
+                    $historyStmt->execute([
+                        $borrowingId,
+                        $request['user_id'],
+                        $item['equipment_id'],
+                        'borrow',
+                        'อนุมัติโดย: ' . $approver_name,
+                        $approver_id,
+                        $approver_name
+                    ]);
+                    
+                    // Update equipment quantity
+                    $updateEquipmentStmt = $conn->prepare('
+                        UPDATE equipment 
+                        SET quantity_available = quantity_available - 1,
+                            status = CASE 
+                                WHEN quantity_available - 1 <= 0 THEN "unavailable"
+                                WHEN quantity_available - 1 <= 5 THEN "limited"
+                                ELSE status
+                            END
+                        WHERE id = ?
+                    ');
+                    $updateEquipmentStmt->execute([$item['equipment_id']]);
+                }
+                
+                // Update approved quantity
+                $updateItemStmt = $conn->prepare('
+                    UPDATE borrow_request_items 
+                    SET quantity_approved = quantity_requested 
+                    WHERE id = ?
+                ');
+                $updateItemStmt->execute([$item['id']]);
+            }
+            
+            // Update request status
+            $upd = $conn->prepare('UPDATE borrow_requests SET status = :status, approver_id = :approver_id, approver_name = :approver_name, approved_at = NOW() WHERE id = :id');
+            $status = 'approved';
+            $upd->bindParam(':status', $status, PDO::PARAM_STR);
+            $upd->bindParam(':approver_id', $approver_id, PDO::PARAM_INT);
+            $upd->bindParam(':approver_name', $approver_name, PDO::PARAM_STR);
+            $upd->bindParam(':id', $id, PDO::PARAM_INT);
+            
+            if (!$upd->execute()) {
+                throw new Exception('ไม่สามารถอัปเดตสถานะคำขอได้');
+            }
+            
+            $conn->commit();
+            Response::success('อนุมัติคำขอสำเร็จ');
+            
+        } catch (Exception $e) {
+            $conn->rollBack();
+            Response::error('ไม่สามารถอนุมัติคำขอได้: ' . $e->getMessage(), 500);
+        }
         return;
     }
     

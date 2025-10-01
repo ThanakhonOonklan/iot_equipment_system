@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Sep 28, 2025 at 03:26 PM
+-- Generation Time: Oct 01, 2025 at 06:53 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.0.30
 
@@ -20,12 +20,6 @@ SET time_zone = "+00:00";
 --
 -- Database: `iot_equipment_system`
 --
-
--- สร้างฐานข้อมูลถ้ายังไม่มี
-CREATE DATABASE IF NOT EXISTS `iot_equipment_system` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-
--- เลือกฐานข้อมูล
-USE `iot_equipment_system`;
 
 DELIMITER $$
 --
@@ -135,6 +129,22 @@ CREATE TABLE `borrowing` (
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='ตารางการยืม-คืน';
 
+--
+-- Dumping data for table `borrowing`
+--
+
+INSERT INTO `borrowing` (`id`, `user_id`, `equipment_id`, `borrow_date`, `return_date`, `due_date`, `status`, `notes`, `created_at`, `updated_at`) VALUES
+(28, 27, 3, '2025-10-01 00:00:00', NULL, '2025-10-02 00:00:00', 'borrowed', 'อนุมัติโดย: เจ เจ', '2025-10-01 04:39:24', '2025-10-01 04:39:24'),
+(29, 27, 3, '2025-10-01 00:00:00', NULL, '2025-10-02 00:00:00', 'borrowed', 'อนุมัติโดย: เจ เจ', '2025-10-01 04:39:24', '2025-10-01 04:39:24'),
+(30, 27, 2, '2025-10-01 00:00:00', NULL, '2025-10-02 00:00:00', 'borrowed', 'อนุมัติโดย: เจ เจ', '2025-10-01 04:39:24', '2025-10-01 04:39:24'),
+(31, 27, 1, '2025-10-01 00:00:00', NULL, '2025-10-02 00:00:00', 'borrowed', 'อนุมัติโดย: เจ เจ', '2025-10-01 04:39:24', '2025-10-01 04:39:24'),
+(32, 27, 2, '2025-10-01 00:00:00', NULL, '2025-10-04 00:00:00', 'borrowed', 'อนุมัติโดย: เจ เจ', '2025-10-01 04:46:30', '2025-10-01 04:46:30'),
+(33, 27, 2, '2025-10-01 00:00:00', NULL, '2025-10-04 00:00:00', 'borrowed', 'อนุมัติโดย: เจ เจ', '2025-10-01 04:46:30', '2025-10-01 04:46:30'),
+(34, 27, 2, '2025-10-01 00:00:00', NULL, '2025-10-04 00:00:00', 'borrowed', 'อนุมัติโดย: เจ เจ', '2025-10-01 04:46:30', '2025-10-01 04:46:30'),
+(35, 27, 5, '2025-10-01 00:00:00', NULL, '2025-10-04 00:00:00', 'borrowed', 'อนุมัติโดย: เจ เจ', '2025-10-01 04:46:30', '2025-10-01 04:46:30'),
+(36, 27, 10, '2025-10-01 00:00:00', NULL, '2025-10-04 00:00:00', 'borrowed', 'อนุมัติโดย: เจ เจ', '2025-10-01 04:46:30', '2025-10-01 04:46:30'),
+(37, 27, 9, '2025-10-01 00:00:00', NULL, '2025-10-04 00:00:00', 'borrowed', 'อนุมัติโดย: เจ เจ', '2025-10-01 04:46:30', '2025-10-01 04:46:30');
+
 -- --------------------------------------------------------
 
 --
@@ -146,11 +156,30 @@ CREATE TABLE `borrowing_history` (
   `borrowing_id` int(11) NOT NULL COMMENT 'ID การยืม',
   `user_id` int(11) NOT NULL COMMENT 'ID ผู้ใช้',
   `equipment_id` int(11) NOT NULL COMMENT 'ID อุปกรณ์',
-  `action` enum('borrow','return','extend','lost') NOT NULL COMMENT 'การกระทำ',
+  `approver_id` int(11) DEFAULT NULL COMMENT 'ID ผู้อนุมัติ',
+  `approver_name` varchar(100) DEFAULT NULL COMMENT 'ชื่อผู้อนุมัติ',
+  `equipment_names` text DEFAULT NULL COMMENT 'รายชื่ออุปกรณ์',
+  `action` enum('borrow','return','extend','lost','approve') NOT NULL COMMENT 'การกระทำ',
   `action_date` datetime NOT NULL COMMENT 'วันที่กระทำ',
   `notes` text DEFAULT NULL COMMENT 'หมายเหตุ',
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='ตารางประวัติการยืม-คืน';
+
+--
+-- Dumping data for table `borrowing_history`
+--
+
+INSERT INTO `borrowing_history` (`id`, `borrowing_id`, `user_id`, `equipment_id`, `approver_id`, `approver_name`, `equipment_names`, `action`, `action_date`, `notes`, `created_at`) VALUES
+(21, 28, 27, 3, 27, 'เจ เจ', NULL, 'borrow', '2025-10-01 11:39:24', 'อนุมัติโดย: เจ เจ', '2025-10-01 04:39:24'),
+(22, 29, 27, 3, 27, 'เจ เจ', NULL, 'borrow', '2025-10-01 11:39:24', 'อนุมัติโดย: เจ เจ', '2025-10-01 04:39:24'),
+(23, 30, 27, 2, 27, 'เจ เจ', NULL, 'borrow', '2025-10-01 11:39:24', 'อนุมัติโดย: เจ เจ', '2025-10-01 04:39:24'),
+(24, 31, 27, 1, 27, 'เจ เจ', NULL, 'borrow', '2025-10-01 11:39:24', 'อนุมัติโดย: เจ เจ', '2025-10-01 04:39:24'),
+(25, 32, 27, 2, 27, 'เจ เจ', NULL, 'borrow', '2025-10-01 11:46:30', 'อนุมัติโดย: เจ เจ', '2025-10-01 04:46:30'),
+(26, 33, 27, 2, 27, 'เจ เจ', NULL, 'borrow', '2025-10-01 11:46:30', 'อนุมัติโดย: เจ เจ', '2025-10-01 04:46:30'),
+(27, 34, 27, 2, 27, 'เจ เจ', NULL, 'borrow', '2025-10-01 11:46:30', 'อนุมัติโดย: เจ เจ', '2025-10-01 04:46:30'),
+(28, 35, 27, 5, 27, 'เจ เจ', NULL, 'borrow', '2025-10-01 11:46:30', 'อนุมัติโดย: เจ เจ', '2025-10-01 04:46:30'),
+(29, 36, 27, 10, 27, 'เจ เจ', NULL, 'borrow', '2025-10-01 11:46:30', 'อนุมัติโดย: เจ เจ', '2025-10-01 04:46:30'),
+(30, 37, 27, 9, 27, 'เจ เจ', NULL, 'borrow', '2025-10-01 11:46:30', 'อนุมัติโดย: เจ เจ', '2025-10-01 04:46:30');
 
 -- --------------------------------------------------------
 
@@ -165,10 +194,21 @@ CREATE TABLE `borrow_requests` (
   `borrow_date` date NOT NULL COMMENT 'วันที่ต้องการยืม',
   `return_date` date NOT NULL COMMENT 'วันที่ต้องการคืน',
   `status` enum('pending','approved','rejected','completed') DEFAULT 'pending' COMMENT 'สถานะคำขอ',
+  `approver_id` int(11) DEFAULT NULL COMMENT 'ID ผู้อนุมัติ',
+  `approver_name` varchar(100) DEFAULT NULL COMMENT 'ชื่อผู้อนุมัติ',
+  `approved_at` datetime DEFAULT NULL COMMENT 'วันที่อนุมัติ',
   `notes` text DEFAULT NULL COMMENT 'หมายเหตุเพิ่มเติม',
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='ตารางคำขอยืมอุปกรณ์';
+
+--
+-- Dumping data for table `borrow_requests`
+--
+
+INSERT INTO `borrow_requests` (`id`, `user_id`, `request_date`, `borrow_date`, `return_date`, `status`, `approver_id`, `approver_name`, `approved_at`, `notes`, `created_at`, `updated_at`) VALUES
+(32, 27, '2025-10-01 11:38:53', '2025-10-01', '2025-10-02', 'approved', 27, 'เจ เจ', '2025-10-01 11:39:24', '', '2025-10-01 04:38:53', '2025-10-01 04:39:24'),
+(33, 27, '2025-10-01 11:46:27', '2025-10-01', '2025-10-04', 'approved', 27, 'เจ เจ', '2025-10-01 11:46:30', '', '2025-10-01 04:46:27', '2025-10-01 04:46:30');
 
 -- --------------------------------------------------------
 
@@ -184,6 +224,19 @@ CREATE TABLE `borrow_request_items` (
   `quantity_approved` int(11) DEFAULT 0 COMMENT 'จำนวนที่อนุมัติ',
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='ตารางรายละเอียดคำขอยืม';
+
+--
+-- Dumping data for table `borrow_request_items`
+--
+
+INSERT INTO `borrow_request_items` (`id`, `request_id`, `equipment_id`, `quantity_requested`, `quantity_approved`, `created_at`) VALUES
+(63, 32, 3, 2, 2, '2025-10-01 04:38:53'),
+(64, 32, 2, 1, 1, '2025-10-01 04:38:53'),
+(65, 32, 1, 1, 1, '2025-10-01 04:38:53'),
+(66, 33, 2, 3, 3, '2025-10-01 04:46:27'),
+(67, 33, 5, 1, 1, '2025-10-01 04:46:27'),
+(68, 33, 10, 1, 1, '2025-10-01 04:46:27'),
+(69, 33, 9, 1, 1, '2025-10-01 04:46:27');
 
 -- --------------------------------------------------------
 
@@ -209,47 +262,50 @@ CREATE TABLE `equipment` (
 --
 
 INSERT INTO `equipment` (`id`, `name`, `description`, `category`, `image_url`, `quantity_total`, `quantity_available`, `status`, `created_at`, `updated_at`) VALUES
-(1, 'ESP32 Development Board', 'บอร์ดพัฒนา ESP32 สำหรับโปรเจ็ค IoT', 'Microcontroller', 'https://www.az-delivery.de/cdn/shop/products/esp32-nodemcu-module-wlan-wifi-development-board-mit-cp2102-nachfolgermodell-zum-esp8266-kompatibel-mit-arduino-872375.jpg?v=1679400491', 10, 10, 'available', '2025-09-28 06:15:58', '2025-09-28 10:31:38'),
-(2, 'DHT22 Temperature Sensor', 'เซ็นเซอร์วัดอุณหภูมิและความชื้น', 'Sensor', 'https://static.cytron.io/image/cache/catalog/products/SN-DHT22-MOD/dht22-sensor-module-breakout-a4872-800x800.jpg', 20, 18, 'available', '2025-09-28 06:15:58', '2025-09-28 09:17:55'),
-(3, 'OLED 128x64 Display', 'จอแสดงผล OLED ขนาด 128x64 พิกเซล', 'Display', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTHCVQEXvULOa5LAR-VAw6X9x4J3IFymz2iQg&amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;s', 100, 10, 'limited', '2025-09-28 06:15:58', '2025-09-28 12:39:54'),
-(4, 'USB Cable Type-C', 'สาย USB Type-C สำหรับเชื่อมต่อ', 'Cable', 'https://res.cloudinary.com/rsc/image/upload/b_rgb:FFFFFF,c_pad,dpr_2.625,f_auto,h_214,q_auto,w_380/c_pad,h_214,w_380/R2133133-01?pgw=1', 30, 30, 'available', '2025-09-28 06:15:58', '2025-09-28 09:18:35'),
-(5, 'Breadboard 830 Points', 'บอร์ดทดลอง 830 จุด', 'Prototyping', 'https://inwfile.com/s-f/k4b3j9.png', 15, 15, 'available', '2025-09-28 06:15:58', '2025-09-28 09:18:49'),
-(6, 'd', 'd', 'dd', 'https://inwfile.com/s-o/z6yfkr.jpg', 12, 12, 'available', '2025-09-28 09:15:34', '2025-09-28 09:15:34'),
-(7, 'ESP32 Development Board', 'บอร์ดพัฒนา ESP32 Wi‑Fi + Bluetooth', 'Microcontroller', 'https://inwfile.com/s-fp/38yybb.png', 12, 10, 'available', '2025-09-28 09:43:02', '2025-09-28 12:39:41'),
-(8, 'DHT22 Temperature Sensor', 'เซ็นเซอร์วัดอุณหภูมิและความชื้น', 'Sensor', 'https://www.waveshare.com/media/catalog/product/cache/1/image/800x800/9df78eab33525d08d6e5fb8d27136e95/d/h/dht22-temperature-humidity-sensor-1.jpg', 20, 18, 'available', '2025-09-28 09:43:02', '2025-09-28 12:41:46'),
-(9, 'OLED 128x64 Display', 'จอแสดงผล OLED ขนาด 128x64 พิกเซล', 'Display', 'https://th.enrichlcddisplay.com/uploads/16158/1-3-inch-128x64-display-module-i2c-oled9fb16.jpg', 8, 6, 'available', '2025-09-28 09:43:02', '2025-09-28 12:38:53'),
-(10, 'USB Cable Type‑C', 'สาย USB Type‑C สำหรับชาร์จ/ถ่ายโอนข้อมูล', 'Cable', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS8dxFRsfMrmQbCOvwVYs1GDVkge_grjdSq6w&amp;s', 35, 30, 'available', '2025-09-28 09:43:02', '2025-09-28 12:38:42'),
+(1, 'ESP32 Development Board', 'บอร์ดพัฒนา ESP32 สำหรับโปรเจ็ค IoT', 'Microcontroller', 'https://www.az-delivery.de/cdn/shop/products/esp32-nodemcu-module-wlan-wifi-development-board-mit-cp2102-nachfolgermodell-zum-esp8266-kompatibel-mit-arduino-872375.jpg?v=1679400491', 10, 7, 'available', '2025-09-28 06:15:58', '2025-10-01 04:39:24'),
+(2, 'DHT22 Temperature Sensor', 'เซ็นเซอร์วัดอุณหภูมิและความชื้น', 'Sensor', 'https://static.cytron.io/image/cache/catalog/products/SN-DHT22-MOD/dht22-sensor-module-breakout-a4872-800x800.jpg', 20, 8, 'available', '2025-09-28 06:15:58', '2025-10-01 04:46:30'),
+(3, 'OLED 128x64 Display', 'จอแสดงผล OLED ขนาด 128x64 พิกเซล', 'Display', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTHCVQEXvULOa5LAR-VAw6X9x4J3IFymz2iQg&amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;s', 10, 0, 'unavailable', '2025-09-28 06:15:58', '2025-10-01 04:39:24'),
+(4, 'USB Cable Type-C', 'สาย USB Type-C สำหรับเชื่อมต่อ', 'Cable', 'https://res.cloudinary.com/rsc/image/upload/b_rgb:FFFFFF,c_pad,dpr_2.625,f_auto,h_214,q_auto,w_380/c_pad,h_214,w_380/R2133133-01?pgw=1', 30, 30, 'unavailable', '2025-09-28 06:15:58', '2025-09-30 15:56:53'),
+(5, 'Breadboard 830 Points', 'บอร์ดทดลอง 830 จุด', 'Prototyping', 'https://inwfile.com/s-f/k4b3j9.png', 15, 14, 'available', '2025-09-28 06:15:58', '2025-10-01 04:46:30'),
+(6, 'd', 'd', 'dd', 'https://inwfile.com/s-o/z6yfkr.jpg', 12, 12, 'available', '2025-09-28 09:15:34', '2025-09-30 15:35:33'),
+(7, 'ESP32 Development Board', 'บอร์ดพัฒนา ESP32 Wi‑Fi + Bluetooth', 'Microcontroller', 'https://inwfile.com/s-fp/38yybb.png', 12, 12, 'available', '2025-09-28 09:43:02', '2025-09-30 15:35:29'),
+(8, 'DHT22 Temperature Sensor', 'เซ็นเซอร์วัดอุณหภูมิและความชื้น', 'Sensor', 'https://www.waveshare.com/media/catalog/product/cache/1/image/800x800/9df78eab33525d08d6e5fb8d27136e95/d/h/dht22-temperature-humidity-sensor-1.jpg', 20, 20, 'available', '2025-09-28 09:43:02', '2025-09-30 15:35:25'),
+(9, 'OLED 128x64 Display', 'จอแสดงผล OLED ขนาด 128x64 พิกเซล', 'Display', 'https://th.enrichlcddisplay.com/uploads/16158/1-3-inch-128x64-display-module-i2c-oled9fb16.jpg', 8, 7, 'available', '2025-09-28 09:43:02', '2025-10-01 04:46:30'),
+(10, 'USB Cable Type‑C', 'สาย USB Type‑C สำหรับชาร์จ/ถ่ายโอนข้อมูล', 'Cable', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS8dxFRsfMrmQbCOvwVYs1GDVkge_grjdSq6w&amp;amp;s', 35, 34, 'available', '2025-09-28 09:43:02', '2025-10-01 04:46:30'),
 (11, 'Raspberry Pi 4 Model B', 'คอมพิวเตอร์จิ๋วสำหรับงาน IoT', 'Computer', 'https://media.rs-online.com/image/upload/bo_1.5px_solid_white,b_auto,c_pad,dpr_2,f_auto,h_399,q_auto,w_710/c_pad,h_399,w_710/R1822096-01?pgw=1', 5, 1, 'limited', '2025-09-28 09:43:02', '2025-09-28 12:42:15'),
-(12, 'Breadboard 830 Points', 'เบรดบอร์ดสำหรับทดลองวงจร 830 จุด', 'Prototyping', 'https://cdn-shop.adafruit.com/970x728/239-03.jpg', 20, 15, 'available', '2025-09-28 09:43:02', '2025-09-28 12:38:13'),
-(13, 'Multimeter', 'มัลติมิเตอร์ดิจิทัล', 'Tool', 'https://media.fluke.com/9308ee59-4d6d-4702-848f-b108002ad3f0_product_slideshow_main.jpg', 5, 2, 'unavailable', '2025-09-28 09:43:02', '2025-09-28 12:51:08'),
-(14, 'Soldering Station', 'ชุดหัวแร้งบัดกรีพร้อมสถานี', 'Tool', 'https://images.toolworld.in/product/1638463669.jpg', 3, 1, 'maintenance', '2025-09-28 09:43:02', '2025-09-28 12:51:13'),
+(12, 'Breadboard 830 Points', 'เบรดบอร์ดสำหรับทดลองวงจร 830 จุด', 'Prototyping', 'https://cdn-shop.adafruit.com/970x728/239-03.jpg', 20, 9, 'maintenance', '2025-09-28 09:43:02', '2025-09-28 14:22:31'),
+(13, 'Multimeter', 'มัลติมิเตอร์ดิจิทัล', 'Tool', 'https://media.fluke.com/9308ee59-4d6d-4702-848f-b108002ad3f0_product_slideshow_main.jpg', 5, 2, 'maintenance', '2025-09-28 09:43:02', '2025-09-28 14:07:00'),
+(14, 'Soldering Station', 'ชุดหัวแร้งบัดกรีพร้อมสถานี', 'Tool', 'https://images.toolworld.in/product/1638463669.jpg', 3, 3, 'maintenance', '2025-09-28 09:43:02', '2025-09-30 05:49:19'),
 (15, 'Jumper Wires Set', 'สายจัมเปอร์ ผู้‑ผู้ / ผู้‑เมีย / เมีย‑เมีย', 'Accessory', 'https://m.media-amazon.com/images/I/71u8UW9FDeL._UF1000,1000_QL80_.jpg', 100, 80, 'available', '2025-09-28 09:43:02', '2025-09-28 12:41:58'),
-(16, 'HC‑SR04 Ultrasonic Sensor', 'เซ็นเซอร์วัดระยะ Ultrasonic', 'Sensor', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTwuaFhyqxiFDAvQJBRvwyTP-1NL0J4VkmY-Q&amp;amp;amp;s', 25, 22, 'available', '2025-09-28 09:43:02', '2025-09-28 12:43:44');
+(16, 'HC‑SR04 Ultrasonic Sensor', 'เซ็นเซอร์วัดระยะ Ultrasonic', 'Sensor', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTwuaFhyqxiFDAvQJBRvwyTP-1NL0J4VkmY-Q&amp;amp;amp;s', 25, 22, 'available', '2025-09-28 09:43:02', '2025-09-28 12:43:44'),
+(17, 'ESP32', 'บอร์ดเก่านิดหน่อย ขามันหัก', 'Microcontroller', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSMoLHoKhMRzTFDPtm4tnwk0HVfKEgpKIPhyQ&amp;amp;amp;amp;amp;amp;amp;s', 10, 4, 'limited', '2025-09-28 14:03:17', '2025-09-28 14:04:52'),
+(18, 'yee', 'yee', 'yee', 'https://media.tenor.com/fDjnmvont8MAAAAM/yeemo.gif', 5, 1, 'available', '2025-09-30 15:51:08', '2025-09-30 15:51:08');
 
 -- --------------------------------------------------------
 
 --
--- Dumping data for table `borrow_requests`
+-- Table structure for table `pending_registrations`
 --
 
-INSERT INTO `borrow_requests` (`id`, `user_id`, `request_date`, `borrow_date`, `return_date`, `status`, `notes`, `created_at`, `updated_at`) VALUES
-(1, 9, '2025-09-28 10:00:00', '2025-09-30', '2025-10-05', 'pending', 'สำหรับโปรเจ็ค IoT วัดอุณหภูมิ', '2025-09-28 10:00:00', '2025-09-28 10:00:00'),
-(2, 10, '2025-09-28 11:30:00', '2025-10-01', '2025-10-08', 'approved', 'ใช้งานในห้องปฏิบัติการ', '2025-09-28 11:30:00', '2025-09-28 12:00:00'),
-(3, 11, '2025-09-28 14:15:00', '2025-10-02', '2025-10-10', 'pending', 'สำหรับการทดลอง Arduino', '2025-09-28 14:15:00', '2025-09-28 14:15:00');
-
--- --------------------------------------------------------
+CREATE TABLE `pending_registrations` (
+  `id` int(11) NOT NULL,
+  `fullname` varchar(100) NOT NULL,
+  `email` varchar(50) NOT NULL,
+  `student_id` varchar(14) NOT NULL,
+  `password_hash` varchar(255) NOT NULL,
+  `role` enum('admin','staff','user') NOT NULL DEFAULT 'user',
+  `status` enum('pending','approved','rejected') NOT NULL DEFAULT 'pending',
+  `notes` text DEFAULT NULL,
+  `requested_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `reviewed_at` timestamp NULL DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
--- Dumping data for table `borrow_request_items`
+-- Dumping data for table `pending_registrations`
 --
 
-INSERT INTO `borrow_request_items` (`id`, `request_id`, `equipment_id`, `quantity_requested`, `quantity_approved`, `created_at`) VALUES
-(1, 1, 2, 2, 0, '2025-09-28 10:00:00'),
-(2, 1, 9, 1, 0, '2025-09-28 10:00:00'),
-(3, 2, 1, 1, 1, '2025-09-28 11:30:00'),
-(4, 2, 5, 1, 1, '2025-09-28 11:30:00'),
-(5, 3, 7, 2, 0, '2025-09-28 14:15:00'),
-(6, 3, 15, 10, 0, '2025-09-28 14:15:00');
+INSERT INTO `pending_registrations` (`id`, `fullname`, `email`, `student_id`, `password_hash`, `role`, `status`, `notes`, `requested_at`, `reviewed_at`) VALUES
+(19, 'สมชาย ใจดี', 's6806021411999@kmutnb.ac.th', 's6806021411999', '$2y$10$9OcpsfGgiS2VaLNx7HxHyebiV5CLgHAwfFu4X5RjkDM8jPeTjxVmG', 'user', 'pending', NULL, '2025-10-01 04:52:23', NULL);
 
 -- --------------------------------------------------------
 
@@ -274,40 +330,21 @@ CREATE TABLE `users` (
 --
 
 INSERT INTO `users` (`id`, `student_id`, `email`, `fullname`, `password`, `role`, `status`, `created_at`, `updated_at`) VALUES
-(9, 's6706021410195', 's6706021410195@kmutnb.ac.th', 'นาย กิตติพงศ์ ใจดี', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'user', 'active', '2025-09-28 08:13:36', '2025-09-28 08:13:36'),
-(10, 's6706021410196', 's6706021410196@kmutnb.ac.th', 'นางสาว พิมพ์ชนก แสงทอง', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'user', 'active', '2025-09-28 08:13:36', '2025-09-28 08:13:36'),
-(11, 's6706021410197', 's6706021410197@kmutnb.ac.th', 'นาย ธนากร ศรีสวัสดิ์', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'user', 'active', '2025-09-28 08:13:36', '2025-09-28 08:13:36'),
-(12, 's6706021410198', 's6706021410198@kmutnb.ac.th', 'นางสาว วราภรณ์ จิตอาสา', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'user', 'active', '2025-09-28 08:13:36', '2025-09-28 08:13:36'),
-(13, 's6706021410199', 's6706021410199@kmutnb.ac.th', 'นาย ปวิช ผดุงไทย', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'user', 'active', '2025-09-28 08:13:36', '2025-09-28 08:13:36'),
-(14, 's6706021410200', 's6706021410200@kmutnb.ac.th', 'นางสาว ชนกานต์ บุญมาก', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'user', 'active', '2025-09-28 08:13:36', '2025-09-28 08:13:36'),
-(15, 's6706021410201', 's6706021410201@kmutnb.ac.th', 'นาย ภูริวัจน์ รุ่งเรือง', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'user', 'active', '2025-09-28 08:13:36', '2025-09-28 08:13:36'),
-(16, 's6706021410202', 's6706021410202@kmutnb.ac.th', 'นางสาว สุชาดา ทองแท้', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'user', 'active', '2025-09-28 08:13:36', '2025-09-28 08:13:36'),
-(17, 's6706021410203', 's6706021410203@kmutnb.ac.th', 'นาย ชยุตม์ กิตติคุณ', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'user', 'active', '2025-09-28 08:13:36', '2025-09-28 08:13:36'),
-(18, 's6706021410204', 's6706021410204@kmutnb.ac.th', 'นางสาว ศศิธร มีชัย', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'user', 'active', '2025-09-28 08:13:36', '2025-09-28 08:13:36'),
-(20, 's6706021410192', 's6706021410192@kmutnb.ac.th', 'ธนกรณ์ อ่อนกลั่น', '$2y$10$FVCbLlt0vZyw4R8oC6FwG.s2aqJpRC/./l2Qg6lJYxVeRNDCnkjpu', 'admin', 'active', '2025-09-28 08:40:30', '2025-09-28 12:30:01');
-
--- --------------------------------------------------------
-
---
--- Dumping data for table `borrowing`
---
-
-INSERT INTO `borrowing` (`id`, `user_id`, `equipment_id`, `borrow_date`, `return_date`, `due_date`, `status`, `notes`, `created_at`, `updated_at`) VALUES
-(1, 9, 1, '2025-09-25 09:00:00', NULL, '2025-10-02 17:00:00', 'borrowed', 'สำหรับโปรเจ็ค IoT', '2025-09-25 09:00:00', '2025-09-25 09:00:00'),
-(2, 10, 2, '2025-09-26 10:30:00', '2025-09-28 16:00:00', '2025-10-03 17:00:00', 'returned', 'ใช้งานเสร็จแล้ว', '2025-09-26 10:30:00', '2025-09-28 16:00:00'),
-(3, 11, 7, '2025-09-27 14:15:00', NULL, '2025-10-04 17:00:00', 'borrowed', 'ทดลอง Arduino', '2025-09-27 14:15:00', '2025-09-27 14:15:00');
-
--- --------------------------------------------------------
-
---
--- Dumping data for table `borrowing_history`
---
-
-INSERT INTO `borrowing_history` (`id`, `borrowing_id`, `user_id`, `equipment_id`, `action`, `action_date`, `notes`, `created_at`) VALUES
-(1, 1, 9, 1, 'borrow', '2025-09-25 09:00:00', 'สำหรับโปรเจ็ค IoT', '2025-09-25 09:00:00'),
-(2, 2, 10, 2, 'borrow', '2025-09-26 10:30:00', 'ใช้งานในห้องปฏิบัติการ', '2025-09-26 10:30:00'),
-(3, 2, 10, 2, 'return', '2025-09-28 16:00:00', 'ใช้งานเสร็จแล้ว', '2025-09-28 16:00:00'),
-(4, 3, 11, 7, 'borrow', '2025-09-27 14:15:00', 'ทดลอง Arduino', '2025-09-27 14:15:00');
+(9, 's6706021410195', 's6706021410195@kmutnb.ac.th', 'กิตติพงศ์ ใจดี', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'user', 'active', '2025-09-28 08:13:36', '2025-09-28 13:38:13'),
+(10, 's6706021410196', 's6706021410196@kmutnb.ac.th', 'พิมพ์ชนก แสงทอง', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'user', 'active', '2025-09-28 08:13:36', '2025-09-28 13:38:10'),
+(11, 's6706021410197', 's6706021410197@kmutnb.ac.th', 'ธนากร ศรีสวัสดิ์', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'user', 'active', '2025-09-28 08:13:36', '2025-09-28 13:38:08'),
+(12, 's6706021410198', 's6706021410198@kmutnb.ac.th', 'วราภรณ์ จิตอาสา', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'user', 'active', '2025-09-28 08:13:36', '2025-09-28 13:38:04'),
+(13, 's6706021410199', 's6706021410199@kmutnb.ac.th', 'ปวิช ผดุงไทย', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'user', 'active', '2025-09-28 08:13:36', '2025-09-28 13:38:02'),
+(14, 's6706021410200', 's6706021410200@kmutnb.ac.th', 'ชนกานต์ บุญมาก', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'user', 'active', '2025-09-28 08:13:36', '2025-09-28 13:37:59'),
+(15, 's6706021410201', 's6706021410201@kmutnb.ac.th', 'ภูริวัจน์ รุ่งเรือง', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'user', 'active', '2025-09-28 08:13:36', '2025-09-28 13:37:53'),
+(16, 's6706021410202', 's6706021410202@kmutnb.ac.th', 'สุชาดา ทองแท้', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'user', 'active', '2025-09-28 08:13:36', '2025-09-28 13:37:56'),
+(20, 's6706021410192', 's6706021410192@kmutnb.ac.th', 'ธนกรณ์ อ่อนกลั่น', '$2y$10$FVCbLlt0vZyw4R8oC6FwG.s2aqJpRC/./l2Qg6lJYxVeRNDCnkjpu', 'admin', 'active', '2025-09-28 08:40:30', '2025-09-30 15:44:23'),
+(22, 's6706021410141', 's6706021410141@kmutnb.ac.th', 'ต้าต้า', '$2y$10$GSVf7sebfsyzVA8Qr9ZgvunUuQYkG.IJ7eX3C/BuDxH/Skp8BbJRi', 'user', 'suspended', '2025-09-29 06:12:17', '2025-09-29 10:23:22'),
+(23, 's6706021410000', 's6706021410000@kmutnb.ac.th', 'เจเจ', '$2y$10$7b/R3NG0HDT0yubME8Axt.ah98cOBnPqfZmQGoA5bNKRPr2veKI8e', 'user', 'suspended', '2025-09-29 06:19:37', '2025-09-29 10:10:45'),
+(24, 's6700000000000', 's6700000000000@kmutnb.ac.th', 'mark', '$2y$10$BGxY3KBXkmYoFzMN7w6RMOgFINCTMP0tW26RkNUXIaaEGYPLZXSGO', 'user', 'active', '2025-09-30 05:33:05', '2025-09-30 05:33:08'),
+(25, 's6700021410192', 's6700021410192@kmutnb.ac.th', 'โอม', '$2y$10$KrbJRpEnY1ILRb.LxeZz/.QpKmqPxjfwPA.Tino015a9Qkly1xQX2', 'admin', 'active', '2025-09-30 15:31:02', '2025-10-01 04:22:14'),
+(26, 's6706021410177', 's6706021410177@kmutnb.ac.th', 'Jay Zaza', '$2y$10$9sb1QdGRB9/P42K6P1Cqbenmsxyoyd9EWxbJxklBwoSrzyo2ddpZO', 'user', 'active', '2025-09-30 15:31:19', '2025-09-30 15:31:23'),
+(27, 's6806021411333', 's6806021411333@kmutnb.ac.th', 'เจ เจ', '$2y$10$rifpR04w1BpHXcQilzEuEulZReW9PjHM0xSe4W0F1coLargDrSP6W', 'user', 'active', '2025-10-01 04:22:27', '2025-10-01 04:22:36');
 
 -- --------------------------------------------------------
 
@@ -372,6 +409,14 @@ ALTER TABLE `equipment`
   ADD KEY `idx_name` (`name`);
 
 --
+-- Indexes for table `pending_registrations`
+--
+ALTER TABLE `pending_registrations`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `uniq_student_id` (`student_id`),
+  ADD UNIQUE KEY `uniq_email` (`email`);
+
+--
 -- Indexes for table `users`
 --
 ALTER TABLE `users`
@@ -391,37 +436,43 @@ ALTER TABLE `users`
 -- AUTO_INCREMENT for table `borrowing`
 --
 ALTER TABLE `borrowing`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=38;
 
 --
 -- AUTO_INCREMENT for table `borrowing_history`
 --
 ALTER TABLE `borrowing_history`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=31;
 
 --
 -- AUTO_INCREMENT for table `borrow_requests`
 --
 ALTER TABLE `borrow_requests`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=34;
 
 --
 -- AUTO_INCREMENT for table `borrow_request_items`
 --
 ALTER TABLE `borrow_request_items`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=70;
 
 --
 -- AUTO_INCREMENT for table `equipment`
 --
 ALTER TABLE `equipment`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=17;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=19;
+
+--
+-- AUTO_INCREMENT for table `pending_registrations`
+--
+ALTER TABLE `pending_registrations`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=20;
 
 --
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=21;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=28;
 
 --
 -- Constraints for dumped tables

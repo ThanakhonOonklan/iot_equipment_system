@@ -51,7 +51,7 @@ export const Equipment: React.FC = () => {
   });
   
   // Pagination state
-  const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [itemsPerPage, setItemsPerPage] = useState(-1);
   const [currentPage, setCurrentPage] = useState(1);
 
   const toggleSidebar = () => setSidebarCollapsed((v) => !v);
@@ -173,10 +173,11 @@ export const Equipment: React.FC = () => {
                   }}
                   className="px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
-                  <option value={5}>5</option>
-                  <option value={10}>10</option>
-                  <option value={15}>15</option>
-                  <option value={20}>20</option>
+                  <option value={5}>5 รายการ</option>
+                  <option value={10}>10 รายการ </option>
+                  <option value={15}>15 รายการ</option>
+                  <option value={20}>20 รายการ</option>
+                  <option value={50}>50 รายการ</option>
                   <option value={-1}>ทั้งหมด</option>
                 </select>
                 

@@ -83,7 +83,6 @@ export const CreateEquipmentForm: React.FC<CreateEquipmentFormProps> = ({
                   <option value="available">พร้อมยืม</option>
                   <option value="limited">เหลือน้อย</option>
                   <option value="unavailable">ไม่พร้อมยืม</option>
-                  <option value="maintenance">ซ่อมบำรุง</option>
                 </select>
               </div>
             </div>
