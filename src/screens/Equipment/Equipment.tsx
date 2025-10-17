@@ -2,9 +2,10 @@ import React, { useEffect, useMemo, useState } from "react";
 import { Card } from "../../components/ui/card";
 import EquipmentCard, { EquipmentStatus } from "../../components/ui/EquipmentCard";
 import apiService, { type Equipment as EquipmentModel } from "../../services/api";
-import { Sidebar, SlideInPanel } from "../../components/Layout";
+import { MainLayout, SlideInPanel } from "../../components/Layout";
 import { CreateEquipmentForm, EditEquipmentForm } from "../../components/EquipmentForms";
-import { ChevronLeft, ChevronRight, Search } from "lucide-react";
+import SearchInput from "../../components/ui/SearchInput";
+import PageSizeSelect from "../../components/ui/PageSizeSelect";
 import Swal from 'sweetalert2';
 
 type EquipmentItem = {
@@ -24,8 +25,6 @@ export const Equipment: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [query, setQuery] = useState<string>("");
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  const [userRole] = useState<'admin' | 'staff' | 'user' | 'guest'>('user');
   const [showEdit, setShowEdit] = useState(false);
   const [showCreate, setShowCreate] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -54,7 +53,6 @@ export const Equipment: React.FC = () => {
   const [itemsPerPage, setItemsPerPage] = useState(-1);
   const [currentPage, setCurrentPage] = useState(1);
 
-  const toggleSidebar = () => setSidebarCollapsed((v) => !v);
 
 
   useEffect(() => {
@@ -75,7 +73,11 @@ export const Equipment: React.FC = () => {
           quantity_total: e.quantity_total,
           quantity_available: e.quantity_available,
         }));
-        if (!cancelled) setItems(data);
+        if (!cancelled) {
+          setItems(data);
+          // show all items by default
+          setItemsPerPage(data.length);
+        }
       } catch (e: any) {
         if (!cancelled) setError(e.message || "โหลดข้อมูลไม่สำเร็จ");
       } finally {
@@ -98,7 +100,7 @@ export const Equipment: React.FC = () => {
 
   // Pagination logic
   const totalItems = filtered.length;
-  const totalPages = Math.ceil(totalItems / itemsPerPage);
+  const totalPages = itemsPerPage <= 0 ? 1 : Math.ceil(totalItems / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = itemsPerPage === -1 ? totalItems : startIndex + itemsPerPage;
   const paginatedItems = filtered.slice(startIndex, endIndex);
@@ -109,34 +111,31 @@ export const Equipment: React.FC = () => {
   }, [query]);
 
   return (
-    <>
-    <div className="flex min-h-screen bg-gray-50">
-      <Sidebar 
-        isCollapsed={sidebarCollapsed}
-        onToggle={toggleSidebar}
-        userRole={userRole}
-      />
-
-      <main className={`flex-1 transition-all duration-300 ${sidebarCollapsed ? 'ml-0' : 'ml-0'}`}>
-        <div className="min-h-screen p-4">
+    <MainLayout>
+      <style>
+        {`
+          @keyframes fadeInUp {
+            from {
+              opacity: 0;
+              transform: translateY(20px);
+            }
+            to {
+              opacity: 1;
+              transform: translateY(0);
+            }
+          }
+          .animate-fade-in-up {
+            animation: fadeInUp 0.5s ease-out forwards;
+            opacity: 0;
+          }
+        `}
+      </style>
+      <div className="min-h-screen p-4">
           <div className="mx-auto max-w-6xl space-y-4">
             <div className="flex items-center justify-between gap-3">
             
               <div className="flex-1 flex items-center gap-2">
-                <div className="relative min-w-[300px] w-full">
-                  <div className="flex">
-                    <span className="inline-flex items-center px-3 rounded-l-2xl border border-r-0 border-gray-300 bg-zinc-100">
-                      <Search className="h-4 w-4 text-gray-500" />
-                    </span>
-                    <input
-                      type="text"
-                      placeholder="ค้นหาอุปกรณ์ตามชื่อ..."
-                      value={query}
-                      onChange={(e) => setQuery(e.target.value)}
-                      className="flex-1 px-3 py-2 border border-gray-300 border-r-0 rounded-r-2xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    />
-                  </div>
-                </div>
+                <SearchInput value={query} onChange={setQuery} placeholder="ค้นหาอุปกรณ์ตามชื่อ..." />
               </div>
               <button
                 onClick={() => {
@@ -160,64 +159,24 @@ export const Equipment: React.FC = () => {
 
             {/* Pagination Controls */}
             <div className="flex items-center justify-between">
-              <div className="text-sm text-gray-600">
-                {totalItems} รายการ
-              </div>
+              <div className="text-sm text-gray-600">{totalItems} รายการ</div>
               <div className="flex items-center gap-2">
-                <span className="text-sm text-gray-600">แสดง</span>
-                <select
-                  value={itemsPerPage}
-                  onChange={(e) => {
-                    setItemsPerPage(Number(e.target.value));
-                    setCurrentPage(1);
-                  }}
-                  className="px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                <PageSizeSelect value={itemsPerPage} onChange={(v)=>{ setItemsPerPage(v); setCurrentPage(1); }} totalItems={totalItems} options={[5,10,15,20,50]} />
+                <button
+                  onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                  disabled={currentPage === 1}
+                  className="px-2 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  <option value={5}>5 รายการ</option>
-                  <option value={10}>10 รายการ </option>
-                  <option value={15}>15 รายการ</option>
-                  <option value={20}>20 รายการ</option>
-                  <option value={50}>50 รายการ</option>
-                  <option value={-1}>ทั้งหมด</option>
-                </select>
-                
-                {/* Pagination */}
-                <div className="flex items-center gap-1">
-                  <button
-                    onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-                    disabled={currentPage === 1}
-                    className="px-2 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    <ChevronLeft className="h-4 w-4" />
-                  </button>
-                  
-                  {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                    const pageNum = Math.max(1, Math.min(totalPages - 4, currentPage - 2)) + i;
-                    if (pageNum > totalPages) return null;
-                    
-                    return (
-                      <button
-                        key={pageNum}
-                        onClick={() => setCurrentPage(pageNum)}
-                        className={`px-3 py-1 text-sm border rounded ${
-                          currentPage === pageNum
-                            ? 'bg-blue-600 text-white border-blue-600'
-                            : 'border-gray-300 hover:bg-gray-50'
-                        }`}
-                      >
-                        {pageNum}
-                      </button>
-                    );
-                  })}
-                  
-                  <button
-                    onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
-                    disabled={currentPage === totalPages}
-                    className="px-2 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    <ChevronRight className="h-4 w-4" />
-                  </button>
-                </div>
+                  ก่อนหน้า
+                </button>
+                <span className="px-2 text-sm text-gray-600">หน้า {currentPage} จาก {totalPages}</span>
+                <button
+                  onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                  disabled={currentPage === totalPages}
+                  className="px-2 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  ถัดไป
+                </button>
               </div>
             </div>
 
@@ -229,7 +188,7 @@ export const Equipment: React.FC = () => {
               <Card className="p-6 text-sm text-gray-500">ไม่พบอุปกรณ์ที่ตรงกับคำค้นหา</Card>
             ) : (
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-                {paginatedItems.map((item) => {
+                {paginatedItems.map((item, index) => {
                   // กำหนดสีขอบตามสถานะ
                   let borderColor = '';
                   if (item.status === 'unavailable') {
@@ -241,7 +200,11 @@ export const Equipment: React.FC = () => {
                   }
                   
                   return (
-                    <div key={item.id} className={`border-2 ${borderColor} rounded-xl`}>
+                    <div 
+                      key={item.id} 
+                      className={`border-2 ${borderColor} rounded-xl animate-fade-in-up transition-all hover:shadow-lg`}
+                      style={{ animationDelay: `${index * 100}ms` }}
+                    >
                       <EquipmentCard
                         name={item.name}
                         category={item.category}
@@ -270,9 +233,7 @@ export const Equipment: React.FC = () => {
             )}
           </div>
         </div>
-      </main>
-    </div>
-    {/* Slide-in Panel แก้ไข/ลบอุปกรณ์ */}
+      {/* Slide-in Panel แก้ไข/ลบอุปกรณ์ */}
     <SlideInPanel
       isOpen={showEdit && !!selected}
       onClose={() => !saving && setShowEdit(false)}
@@ -438,7 +399,7 @@ export const Equipment: React.FC = () => {
         formError={null}
       />
     </SlideInPanel>
-    </>
+    </MainLayout>
   );
 };
 

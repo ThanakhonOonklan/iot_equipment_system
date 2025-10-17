@@ -1,7 +1,9 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Sidebar } from '../../components/Layout/Sidebar';
+import { MainLayout } from '../../components/Layout';
 import { apiService } from '../../services/api';
-import { Search, User, Package, CheckCircle, ChevronDown, ChevronRight } from 'lucide-react';
+import { User, Package, CheckCircle, ChevronDown, ChevronRight } from 'lucide-react';
+import SearchInput from '../../components/ui/SearchInput';
+import PageSizeSelect from '../../components/ui/PageSizeSelect';
 
 interface HistoryEntry {
   borrowing_id: number;
@@ -40,6 +42,9 @@ export const History: React.FC = () => {
   const [entries, setEntries] = useState<HistoryEntry[]>([]);
   const [query, setQuery] = useState('');
   const [expandedId, setExpandedId] = useState<number | null>(null);
+  // Pagination
+  const [itemsPerPage, setItemsPerPage] = useState<number>(50);
+  const [currentPage, setCurrentPage] = useState<number>(1);
 
 
   const toggleSidebar = () => setSidebarCollapsed(v => !v);
@@ -66,21 +71,43 @@ export const History: React.FC = () => {
     return entries.filter(e => [e.user_fullname, e.user_student_id, e.equipment_names, e.approver_name].some(v => String(v ?? '').toLowerCase().includes(q)));
   }, [entries, query]);
 
+  const totalItems = filtered.length;
+  const totalPages = Math.ceil(totalItems / itemsPerPage) || 1;
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginated = filtered.slice(startIndex, endIndex);
+  React.useEffect(() => { setCurrentPage(1); }, [query]);
+
   return (
-    <div className="flex min-h-screen bg-gray-50">
-      <Sidebar isCollapsed={sidebarCollapsed} onToggle={toggleSidebar} userRole={'admin'} />
-      <main className={`flex-1 transition-all duration-300 ${sidebarCollapsed ? 'ml-0' : 'ml-0'}`}>
-        <div className="min-h-screen p-4">
+    <MainLayout>
+      <div className="min-h-screen p-4">
           <div className="mx-auto max-w-6xl space-y-4">
             <div className="flex items-center justify-between gap-3">
-              <h1 className="text-2xl font-bold text-gray-900">ประวัติการยืม-คืน</h1>
-              <div className="relative min-w-[260px]">
-                <div className="flex">
-                  <span className="inline-flex items-center px-3 rounded-l-2xl border border-r-0 border-gray-300 bg-zinc-100">
-                    <Search className="h-4 w-4 text-gray-500" />
-                  </span>
-                  <input type="text" placeholder="ค้นหา ผู้ยืม | รหัส | อุปกรณ์ | ผู้อนุมัติ" value={query} onChange={(e)=>setQuery(e.target.value)} className="flex-1 px-3 py-2 border border-gray-300 border-r-0 rounded-r-2xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
-                </div>
+              <div className="w-full max-w-sm">
+                <SearchInput value={query} onChange={setQuery} placeholder="ค้นหา ผู้ยืม | รหัส | อุปกรณ์ | ผู้อนุมัติ" />
+              </div>
+            </div>
+
+            {/* Pagination Controls */}
+            <div className="flex items-center justify-between">
+              <div className="text-sm text-gray-600">{totalItems} รายการ</div>
+              <div className="flex items-center gap-2">
+                <PageSizeSelect value={itemsPerPage} onChange={(v)=>{setItemsPerPage(v); setCurrentPage(1);}} totalItems={totalItems} options={[5,10,15,20,50]} />
+                <button
+                  onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                  disabled={currentPage === 1}
+                  className="px-2 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  ก่อนหน้า
+                </button>
+                <span className="px-2 text-sm text-gray-600">หน้า {currentPage} จาก {totalPages}</span>
+                <button
+                  onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                  disabled={currentPage === totalPages}
+                  className="px-2 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  ถัดไป
+                </button>
               </div>
             </div>
 
@@ -90,7 +117,7 @@ export const History: React.FC = () => {
               <div className="p-6 text-sm text-red-600 bg-white rounded-xl border">{error}</div>
             ) : (
               <div className="space-y-3">
-                {filtered.map(h => {
+                {paginated.map(h => {
                   const isOpen = expandedId === h.borrowing_id;
                   return (
                     <div key={h.borrowing_id} className="bg-white border rounded-xl">
@@ -108,8 +135,15 @@ export const History: React.FC = () => {
                               </span>
                               <span className="mx-2">•</span>
                               <span className="inline-flex items-center gap-1">
-                                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-700">
-                                  <CheckCircle className="w-3 h-3 mr-1" /> borrow
+                                <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
+                                  h.status === 'returned' 
+                                    ? 'bg-green-100 text-green-700' 
+                                    : h.status === 'overdue'
+                                      ? 'bg-red-100 text-red-700'
+                                      : 'bg-yellow-100 text-yellow-700'
+                                }`}>
+                                  <CheckCircle className="w-3 h-3 mr-1" /> 
+                                  {h.status === 'returned' ? 'คืนแล้ว' : h.status === 'overdue' ? 'เกินกำหนด' : 'กำลังยืมอยู่'}
                                 </span>
                               </span>
                               <span className="mx-2">•</span>
@@ -158,8 +192,16 @@ export const History: React.FC = () => {
                               </div>
                               <div>
                                 <dt className="text-sm font-medium text-gray-500">สถานะ</dt>
-                                <dd className="mt-1 text-sm text-gray-900">
-                                  {h.status === 'returned' ? 'คืนแล้ว' : h.status === 'overdue' ? 'เกินกำหนด' : 'กำลังยืม'}
+                                <dd className="mt-1">
+                                  <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                                    h.status === 'returned' 
+                                      ? 'bg-green-100 text-green-700' 
+                                      : h.status === 'overdue'
+                                        ? 'bg-red-100 text-red-700'
+                                        : 'bg-yellow-100 text-yellow-700'
+                                  }`}>
+                                    {h.status === 'returned' ? 'คืนแล้ว' : h.status === 'overdue' ? 'เกินกำหนด' : 'กำลังยืมอยู่'}
+                                  </span>
                                 </dd>
                               </div>
                               {h.return_date && (
@@ -180,8 +222,7 @@ export const History: React.FC = () => {
           </div>
 
         </div>
-      </main>
-    </div>
+    </MainLayout>
   );
 };
 

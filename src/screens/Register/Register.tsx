@@ -14,35 +14,35 @@ const formFields = [
     label: "ชื่อ-นามสกุล",
     type: "text",
     icon: User,
-    placeholder: "กรอกชื่อ-นามสกุล"
+    placeholder: ""
   },
   {
     id: "email",
-    label: "อีเมล",
+    label: "อีเมล (รหัส 12 หลัก + -st@rmutsb.ac.th)",
     type: "email",
     icon: Mail,
-    placeholder: "กรอกอีเมล"
+    placeholder: ""
   },
   {
     id: "studentId",
     label: "รหัสนักศึกษา",
     type: "text",
     icon: IdCard,
-    placeholder: "s6706021410192"
+    placeholder: ""
   },
   {
     id: "password",
     label: "รหัสผ่าน",
     type: "password",
     icon: Lock,
-    placeholder: "กรอกรหัสผ่าน"
+    placeholder: ""
   },
   {
     id: "confirmPassword",
     label: "ยืนยันรหัสผ่าน",
     type: "password",
     icon: Lock,
-    placeholder: "ยืนยันรหัสผ่าน"
+    placeholder: ""
   },
 ];
 
@@ -63,12 +63,12 @@ export const SignUp = (): JSX.Element => {
   };
 
   const validateStudentId = (studentId: string): boolean => {
-    const pattern = /^s\d{13}$/;
+    const pattern = /^\d{12}$/;
     return pattern.test(studentId);
   };
 
   const validateEmail = (email: string): boolean => {
-    const pattern = /^s\d{13}@kmutnb\.ac\.th$/;
+    const pattern = /^\d{12}-st@rmutsb\.ac\.th$/;
     return pattern.test(email);
   };
 
@@ -85,7 +85,7 @@ export const SignUp = (): JSX.Element => {
     // Validate email
     if (fieldId === "email") {
       if (value && !validateEmail(value)) {
-        setErrors(prev => ({ ...prev, email: "รูปแบบอีเมลไม่ถูกต้อง (s + รหัส 13 หลัก + @kmutnb.ac.th)" }));
+        setErrors(prev => ({ ...prev, email: "รูปแบบอีเมลไม่ถูกต้อง (รหัส 12 หลัก + -st@rmutsb.ac.th)" }));
       } else {
         setErrors(prev => ({ ...prev, email: undefined }));
       }
@@ -94,7 +94,7 @@ export const SignUp = (): JSX.Element => {
     // Validate student ID
     if (fieldId === "studentId") {
       if (value && !validateStudentId(value)) {
-        setErrors(prev => ({ ...prev, studentId: "รูปแบบรหัสนักศึกษาไม่ถูกต้อง (s + รหัส 13 หลัก)" }));
+        setErrors(prev => ({ ...prev, studentId: "รูปแบบรหัสนักศึกษาไม่ถูกต้อง (รหัส 12 หลัก)" }));
       } else {
         setErrors(prev => ({ ...prev, studentId: undefined }));
       }
@@ -133,11 +133,11 @@ export const SignUp = (): JSX.Element => {
       }
       
       if (!validateEmail(formData.email)) {
-        newErrors.email = "รูปแบบอีเมลไม่ถูกต้อง (s + รหัส 13 หลัก + @kmutnb.ac.th)";
+        newErrors.email = "รูปแบบอีเมลไม่ถูกต้อง (รหัส 12 หลัก + -st@rmutsb.ac.th)";
       }
       
       if (!validateStudentId(formData.studentId)) {
-        newErrors.studentId = "รูปแบบรหัสนักศึกษาไม่ถูกต้อง (s + รหัส 13 หลัก)";
+        newErrors.studentId = "รูปแบบรหัสนักศึกษาไม่ถูกต้อง (รหัส 12 หลัก)";
       }
       
       if (!validatePassword(formData.password)) {
@@ -184,129 +184,136 @@ export const SignUp = (): JSX.Element => {
   };
 
   return (
-    <div className="min-h-screen bg-white flex items-center justify-center p-3">
-      <div className="w-full max-w-4xl flex items-center justify-between gap-8">
-       
-        <div className="hidden lg:flex flex-col items-center justify-center flex-1 space-y-6">
-          <div className="relative">
-            <img 
-              src="/images/logo.png" 
-              alt="IoT System Logo" 
-              className="w-64 h-64 object-contain"
-            />
-          </div>
-          <div className="text-center space-y-4">
-            <h1 className="text-3xl font-bold">
-              <span className="text-[#0EA5E9]">ระบบบริการยืม-</span>
-              <span className="text-gray-700">คืนอุปกรณ์วิชา IoT</span>
-            </h1>
-            <p className="text-base text-gray-600 max-w-sm">
-              เข้าสู่ระบบเพื่อจัดการยืม-คืนอุปกรณ์สำหรับวิชา IoT
-            </p>
-          </div>
-        </div>
-
-        <div className="w-full max-w-sm">
-          <Card className="bg-white/80 backdrop-blur-sm shadow-xl border-0 rounded-xl overflow-hidden">
-            <CardContent className="p-6">
-              <div className="text-center mb-6">
-                <h2 className="text-2xl font-bold text-gray-700 mb-1">สมัครสมาชิก</h2>
-                <p className="text-gray-600 text-sm">กรอกข้อมูลของคุณ</p>
+    <div className="min-h-screen flex items-center justify-center p-3" style={{ backgroundColor: '#EDF7FD' }}>
+      <div className="w-full max-w-6xl">
+        <Card className="bg-white shadow-2xl border-0 rounded-2xl overflow-hidden">
+          <div className="flex min-h-[600px]">
+            {/* Left Section - Logo and System Info */}
+            <div className="hidden lg:flex flex-col items-center justify-center flex-1 bg-gradient-to-br from-[#0EA5E9] to-[#0284C7] p-8 relative">
+              <div className="absolute inset-0 bg-white/10"></div>
+              <div className="relative z-10 text-center space-y-6">
+                <div className="relative">
+                  <img
+                    src="/images/new_logo.jpg"
+                    alt="IoT System Logo"
+                    className="w-64 h-64 object-cover mx-auto rounded-full"
+                  />
+                </div>
+                <div className="space-y-4">
+                  <h1 className="text-3xl font-bold text-white">
+                    ระบบบริการยืม-คืนอุปกรณ์วิชา IoT
+                  </h1>
+                  <p className="text-white/90 text-lg max-w-md">
+                    เข้าสู่ระบบเพื่อจัดการยืม-คืนอุปกรณ์สำหรับวิชา IoT
+                  </p>
+                </div>
               </div>
+            </div>
 
-              <form 
-                className="space-y-5"
-                onSubmit={handleSubmit}
-              >
-                {formFields.map((field) => {
-                  const Icon = field.icon;
-                  const isPassword = field.type === "password";
-                  const showPass = showPassword[field.id];
-                  
-                  return (
-                    <div 
-                      key={field.id} 
-                      className="space-y-1.5"
-                    >
-                      <Label 
-                        htmlFor={field.id}
-                        className="text-xs font-semibold text-gray-700 flex items-center gap-2"
+            {/* Right Section - Signup Form */}
+            <div className="flex-1 flex flex-col justify-center p-6 lg:p-8">
+              <div className="w-full max-w-sm mx-auto">
+                <div className="text-center mb-6">
+                  <h2 className="text-2xl font-bold text-gray-800 mb-1">
+                    สมัครสมาชิก
+                  </h2>
+                  <p className="text-gray-600 text-sm">
+                    กรอกข้อมูลของคุณ
+                  </p>
+                </div>
+
+                <form 
+                  className="space-y-4"
+                  onSubmit={handleSubmit}
+                >
+                  {formFields.map((field) => {
+                    const Icon = field.icon;
+                    const isPassword = field.type === "password";
+                    const showPass = showPassword[field.id];
+                    
+                    return (
+                      <div 
+                        key={field.id} 
+                        className="space-y-1.5"
                       >
-                        <Icon className="w-4 h-4 text-[#0EA5E9]" />
-                        {field.label}
-                      </Label>
-                      <div className="relative">
-                        <Input
-                          id={field.id}
-                          type={isPassword ? (showPass ? "text" : "password") : field.type}
-                          placeholder={field.placeholder}
-                          value={formData[field.id] || ""}
-                          onChange={(e) => handleInputChange(field.id, e.target.value)}
-                          className={`w-full h-10 pl-3 pr-10 bg-white border rounded-lg focus:ring-0 transition-colors duration-200 placeholder:text-gray-400 ${
-                            errors[field.id] 
-                              ? 'border-red-500 focus:border-red-500' 
-                              : 'border-gray-300 focus:border-[#0EA5E9]'
-                          }`}
-                        />
-                        {isPassword && (
-                          <button
-                            type="button"
-                            onClick={() => togglePasswordVisibility(field.id)}
-                            className="absolute right-2.5 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
-                          >
-                            {showPass ? (
-                              <EyeOff className="w-4 h-4" />
-                            ) : (
-                              <Eye className="w-4 h-4" />
-                            )}
-                          </button>
+                        <Label 
+                          htmlFor={field.id}
+                          className="text-xs font-semibold text-gray-700 flex items-center gap-2"
+                        >
+                          <Icon className="w-3 h-3 text-[#0EA5E9]" />
+                          {field.label}
+                        </Label>
+                        <div className="relative">
+                          <Input
+                            id={field.id}
+                            type={isPassword ? (showPass ? "text" : "password") : field.type}
+                            placeholder={field.placeholder}
+                            value={formData[field.id] || ""}
+                            onChange={(e) => handleInputChange(field.id, e.target.value)}
+                            className={`w-full h-10 pl-3 pr-8 bg-white border rounded-lg focus:ring-0 transition-all duration-300 placeholder:text-gray-400 text-sm ${
+                              errors[field.id] 
+                                ? 'border-red-500 focus:border-red-500' 
+                                : 'border-gray-300 focus:border-[#0EA5E9]'
+                            }`}
+                          />
+                          {isPassword && (
+                            <button
+                              type="button"
+                              onClick={() => togglePasswordVisibility(field.id)}
+                              className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                            >
+                              {showPass ? (
+                                <EyeOff className="w-4 h-4" />
+                              ) : (
+                                <Eye className="w-4 h-4" />
+                              )}
+                            </button>
+                          )}
+                        </div>
+                        {errors[field.id] && (
+                          <p className="text-red-500 text-xs mt-1">{errors[field.id]}</p>
                         )}
                       </div>
-                      {errors[field.id] && (
-                        <p className="text-red-500 text-xs mt-1">{errors[field.id]}</p>
-                      )}
+                    );
+                  })}
+
+                  {errors.general && (
+                    <div className="bg-red-50 border border-red-200 text-red-700 px-3 py-2 rounded-lg">
+                      <p className="text-xs">{errors.general}</p>
                     </div>
-                  );
-                })}
+                  )}
 
-                {errors.general && (
-                  <div className="bg-red-50 border border-red-200 text-red-700 px-3 py-2 rounded-lg text-sm">
-                    {errors.general}
+                  <div>
+                    <Button 
+                      type="submit"
+                      disabled={isSubmitting}
+                      className="w-full h-10 bg-gradient-to-r from-[#0EA5E9] to-[#0284C7] hover:from-[#0284C7] hover:to-[#0369A1] text-white font-semibold rounded-lg shadow-md hover:shadow-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                    >
+                      {isSubmitting ? (
+                        <>
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          กำลังสมัครสมาชิก...
+                        </>
+                      ) : (
+                        'ลงทะเบียน'
+                      )}
+                    </Button>
                   </div>
-                )}
 
-                <div>
-                  <Button 
-                    type="submit"
-                    disabled={isSubmitting}
-                    className="w-full h-10 bg-gradient-to-r from-[#0EA5E9] to-[#0284C7] hover:from-[#0284C7] hover:to-[#0369A1] text-white font-semibold rounded-lg shadow-md hover:shadow-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {isSubmitting ? (
-                      <>
-                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                        กำลังสมัครสมาชิก...
-                      </>
-                    ) : (
-                      'ลงทะเบียน'
-                    )}
-                  </Button>
-                </div>
-
-                <div 
-                  className="flex items-center justify-center space-x-2 text-xs text-gray-600 pt-3"
-                >
-                  <span>คุณมีบัญชีอยู่แล้วใช่มั้ย?</span>
-                  <Link
-                    to="/login"
-                    className="text-[#0EA5E9] hover:text-[#0284C7] font-semibold hover:underline transition-colors"
-                  >
-                    เข้าสู่ระบบ
-                  </Link>
-                </div>
-              </form>
-            </CardContent>
-          </Card>
-        </div>
+                  <div className="flex items-center justify-center space-x-2 text-xs text-gray-600 pt-3">
+                    <span>คุณมีบัญชีอยู่แล้วใช่มั้ย?</span>
+                    <Link
+                      to="/login"
+                      className="text-[#0EA5E9] hover:text-[#0284C7] font-semibold hover:underline transition-all duration-300"
+                    >
+                      เข้าสู่ระบบ
+                    </Link>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+        </Card>
       </div>
     </div>
   );

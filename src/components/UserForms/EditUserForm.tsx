@@ -20,8 +20,8 @@ export const EditUserForm: React.FC<EditUserFormProps> = ({
   editError,
 }) => {
   // Validation
-  const editEmailValid = /^s\d{13}@kmutnb\.ac\.th$/.test(editForm.email || "");
-  const editStudentValid = /^s\d{13}$/.test(editForm.student_id || "");
+  const editEmailValid = /^\d{12}-st@rmutsb\.ac\.th$/.test(editForm.email || "");
+  const editStudentValid = /^\d{12}$/.test(editForm.student_id || "");
   
   // Name validation - only letters and spaces
   const nameValid = /^[ก-๙a-zA-Z\s]+$/.test(editForm.fullname.split(' ')[0] || '');
@@ -116,7 +116,7 @@ export const EditUserForm: React.FC<EditUserFormProps> = ({
               />
               {editForm.email && !editEmailValid && (
                 <p className="mt-1 text-xs text-rose-600">
-                  รูปแบบอีเมลต้องเป็น s + รหัส 13 หลัก + @kmutnb.ac.th
+                  รูปแบบอีเมลต้องเป็น รหัส 12 หลัก + -st@rmutsb.ac.th
                 </p>
               )}
             </div>
@@ -155,7 +155,7 @@ export const EditUserForm: React.FC<EditUserFormProps> = ({
               />
               {editForm.student_id && !editStudentValid && (
                 <p className="mt-1 text-xs text-rose-600">
-                  ต้องขึ้นต้นด้วย s และตามด้วยตัวเลข 13 หลัก
+                  ต้องเป็นตัวเลข 12 หลัก
                 </p>
               )}
             </div>
@@ -175,8 +175,8 @@ export const EditUserForm: React.FC<EditUserFormProps> = ({
                   setEditForm({ ...editForm, role: e.target.value })
                 }
               >
-                <option value="user">ผู้ใช้</option>
-                <option value="staff">อาจารย์/เจ้าหน้าที่</option>
+                <option value="user">นักศึกษา</option>
+                <option value="staff">อาจารย์</option>
                 <option value="admin">ผู้ดูแลระบบ</option>
               </select>
             </div>
@@ -189,9 +189,8 @@ export const EditUserForm: React.FC<EditUserFormProps> = ({
                   setEditForm({ ...editForm, status: e.target.value })
                 }
               >
-                <option value="active">ใช้งานได้</option>
-                <option value="inactive">ไม่ใช้งาน</option>
-                <option value="suspended">ระงับการใช้งาน</option>
+                <option value="active">กำลังใช้งาน</option>
+                <option value="suspended">ระงับบัญชี</option>
               </select>
             </div>
           </div>

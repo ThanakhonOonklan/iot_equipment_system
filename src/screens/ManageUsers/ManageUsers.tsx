@@ -1,16 +1,16 @@
 import React, { useEffect, useState } from "react";
-import { Sidebar, SlideInPanel } from "../../components/Layout";
+import { MainLayout, SlideInPanel } from "../../components/Layout";
 import { EditUserForm } from "../../components/UserForms";
 import apiService, { User } from "../../services/api";
 import { Card } from "../../components/ui/card";
-import { Trash2, Search, ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Inbox } from "lucide-react";
+import SearchInput from "../../components/ui/SearchInput";
+import PageSizeSelect from "../../components/ui/PageSizeSelect";
 import Swal from 'sweetalert2';
 import { useAuth } from "../../contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 
 export const Users: React.FC = () => {
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  const [userRole] = useState<"admin" | "staff" | "user" | "guest">("admin");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [users, setUsers] = useState<User[]>([]);
@@ -35,8 +35,6 @@ export const Users: React.FC = () => {
   // Pagination state
   const [itemsPerPage, setItemsPerPage] = useState(50);
   const [currentPage, setCurrentPage] = useState(1);
-
-  const toggleSidebar = () => setSidebarCollapsed((v) => !v);
 
   useEffect(() => {
     (async () => {
@@ -74,38 +72,18 @@ export const Users: React.FC = () => {
   }, [query]);
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
-      <Sidebar
-        isCollapsed={sidebarCollapsed}
-        onToggle={toggleSidebar}
-        userRole={userRole}
-      />
-
-      <main
-        className={`flex-1 transition-all duration-300 ${
-          sidebarCollapsed ? "ml-0" : "ml-0"
-        }`}
-      >
-        <div className="min-h-screen p-4">
+    <MainLayout>
+      <div className="min-h-screen p-4">
           <div className="mx-auto max-w-6xl space-y-4">
             {/* Search Section */}
             <div className="flex items-center justify-between gap-4">
               {/* Search Input */}
               <div className="flex items-center gap-2 flex-1">
-                <div className="relative min-w-[300px] w-full">
-                  <div className="flex">
-                    <span className="inline-flex items-center px-3 rounded-l-2xl border border-r-0 border-gray-300 bg-zinc-100">
-                      <Search className="h-4 w-4 text-gray-500" />
-                    </span>
-                    <input
-                      type="text"
-                      placeholder="ค้นหา รหัส | ชื่อ-นามสกุล | อีเมล"
+                <SearchInput
                   value={query}
-                  onChange={(e) => setQuery(e.target.value)}
-                      className="flex-1 px-3 py-2 border border-gray-300 border-r-0 rounded-r-2xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  onChange={setQuery}
+                  placeholder="ค้นหา รหัส | ชื่อ-นามสกุล | อีเมล"
                 />
-                  </div>
-                </div>
               </div>
               
               {/* Add Button removed */}
@@ -113,64 +91,29 @@ export const Users: React.FC = () => {
 
             {/* Pagination Controls */}
             <div className="flex items-center justify-between">
-              <div className="text-sm text-gray-600">
-                {totalItems} รายการ
-              </div>
+              <div className="text-sm text-gray-600">{totalItems} รายการ</div>
               <div className="flex items-center gap-2">
-                <span className="text-sm text-gray-600">แสดง</span>
-                <select
+                <PageSizeSelect
                   value={itemsPerPage}
-                  onChange={(e) => {
-                    setItemsPerPage(Number(e.target.value));
-                    setCurrentPage(1);
-                  }}
-                  className="px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  onChange={(v) => { setItemsPerPage(v); setCurrentPage(1); }}
+                  totalItems={totalItems}
+                  options={[5,10,15,20,50]}
+                />
+                <button
+                  onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                  disabled={currentPage === 1}
+                  className="px-2 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  <option value={5}>5</option>
-                  <option value={8}>8</option>
-                  <option value={15}>15</option>
-                  <option value={30}>30</option>
-                  <option value={50}>50</option>
-                  <option value={-1}>ทั้งหมด</option>
-                </select>
-                
-                {/* Pagination */}
-                <div className="flex items-center gap-1">
-                  <button
-                    onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-                    disabled={currentPage === 1}
-                    className="px-2 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    <ChevronLeft className="h-4 w-4" />
-                  </button>
-                  
-                  {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                    const pageNum = Math.max(1, Math.min(totalPages - 4, currentPage - 2)) + i;
-                    if (pageNum > totalPages) return null;
-                    
-                    return (
-                      <button
-                        key={pageNum}
-                        onClick={() => setCurrentPage(pageNum)}
-                        className={`px-3 py-1 text-sm border rounded ${
-                          currentPage === pageNum
-                            ? 'bg-blue-600 text-white border-blue-600'
-                            : 'border-gray-300 hover:bg-gray-50'
-                        }`}
-                      >
-                        {pageNum}
-                      </button>
-                    );
-                  })}
-                  
-                  <button
-                    onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
-                    disabled={currentPage === totalPages}
-                    className="px-2 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    <ChevronRight className="h-4 w-4" />
+                  ก่อนหน้า
                 </button>
-                </div>
+                <span className="px-2 text-sm text-gray-600">หน้า {currentPage} จาก {totalPages}</span>
+                <button
+                  onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                  disabled={currentPage === totalPages}
+                  className="px-2 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  ถัดไป
+                </button>
               </div>
             </div>
 
@@ -227,7 +170,7 @@ export const Users: React.FC = () => {
                               ? 'bg-blue-100 text-blue-700'
                               : 'bg-gray-100 text-gray-700'
                           }`}>
-                            {u.role}
+                            {u.role === 'admin' ? 'ผู้ดูแลระบบ' : u.role === 'staff' ? 'อาจารย์' : 'นักศึกษา'}
                           </span>
                         </td>
                         <td className="px-4 py-3">
@@ -236,18 +179,18 @@ export const Users: React.FC = () => {
                               ? 'bg-emerald-100 text-emerald-700' 
                               : 'bg-red-100 text-red-700'
                           }`}>
-                            {u.status}
+                            {u.status === 'active' ? 'กำลังใช้งาน' : 'ระงับบัญชี'}
                           </span>
                         </td>
                       </tr>
                     ))}
                     {paginatedUsers.length === 0 && (
                       <tr>
-                        <td
-                          colSpan={6}
-                          className="px-4 py-6 text-center text-gray-500"
-                        >
-                          ไม่พบข้อมูลสมาชิก
+                        <td colSpan={6} className="px-4 py-10 text-center text-gray-600">
+                          <div className="flex flex-col items-center justify-center">
+                            <Inbox className="w-12 h-12 text-gray-300 mb-3" />
+                            <div className="text-sm">ไม่พบข้อมูลสมาชิก</div>
+                          </div>
                         </td>
                       </tr>
                     )}
@@ -385,9 +328,7 @@ export const Users: React.FC = () => {
             editError={editError}
           />
         </SlideInPanel>
-
-      </main>
-    </div>
+    </MainLayout>
   );
 };
 
