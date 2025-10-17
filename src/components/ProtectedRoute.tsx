@@ -1,5 +1,5 @@
 import React from 'react';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 
 interface ProtectedRouteProps {
@@ -7,7 +7,8 @@ interface ProtectedRouteProps {
 }
 
 export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
-  const { isLoggedIn, isLoading } = useAuth();
+  const { isLoggedIn, isLoading, user } = useAuth() as any;
+  const location = useLocation();
 
   if (isLoading) {
     return (
@@ -22,6 +23,25 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
 
   if (!isLoggedIn) {
     return <Navigate to="/login" replace />;
+  }
+
+  // Role-based route guard
+  const path = location.pathname;
+  const role = user?.role || 'user';
+
+  const roleAllowed = (r: string, p: string): boolean => {
+    if (r === 'admin') return true;
+    if (r === 'staff') {
+      return ['/dashboard','/borrow','/return-equipment','/history','/borrow-requests'].includes(p);
+    }
+    // user
+    return ['/borrow'].includes(p);
+  };
+
+  if (!roleAllowed(role, path)) {
+    // redirect to default per role
+    const redirect = role === 'staff' ? '/dashboard' : '/borrow';
+    return <Navigate to={redirect} replace />;
   }
 
   return <>{children}</>;

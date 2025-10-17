@@ -1,9 +1,12 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { Sidebar } from "../../components/Layout/Sidebar";
+import { MainLayout } from "../../components/Layout";
 import { EquipmentCard, EquipmentStatus } from "../../components/ui/EquipmentCard";
 import { BorrowRequestModal } from "../../components/BorrowRequestModal";
 import { apiService } from "../../services/api";
-import { Search, ShoppingCart, Send } from "lucide-react";
+import { ShoppingCart, Trash2 } from "lucide-react";
+import Swal from 'sweetalert2';
+import SearchInput from "../../components/ui/SearchInput";
+import PageSizeSelect from "../../components/ui/PageSizeSelect";
 
 interface EquipmentItem {
   id: number;
@@ -28,7 +31,6 @@ interface SelectedEquipment {
 }
 
 export const BorrowEquipment: React.FC = () => {
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [items, setItems] = useState<EquipmentItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -41,35 +43,32 @@ export const BorrowEquipment: React.FC = () => {
   const [itemsPerPage, setItemsPerPage] = useState(50);
   const [currentPage, setCurrentPage] = useState(1);
 
-  const toggleSidebar = () => setSidebarCollapsed((v) => !v);
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const res = await apiService.listEquipment();
+      const data = res.data.equipment.map((e: any) => ({
+        id: e.id,
+        name: e.name,
+        category: e.category,
+        quantity: e.quantity_available ?? e.quantity_total ?? 0,
+        status: (e.status as EquipmentStatus) ?? 'available',
+        image_url: e.image_url,
+        description: e.description,
+        quantity_total: e.quantity_total,
+        quantity_available: e.quantity_available,
+      }));
+      setItems(data);
+    } catch (e: any) {
+      setError(e.message || "โหลดข้อมูลไม่สำเร็จ");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    let cancelled = false;
-    async function fetchData() {
-      try {
-        setLoading(true);
-        setError(null);
-        const res = await apiService.listEquipment();
-        const data = res.data.equipment.map((e: any) => ({
-          id: e.id,
-          name: e.name,
-          category: e.category,
-          quantity: e.quantity_available ?? e.quantity_total ?? 0,
-          status: (e.status as EquipmentStatus) ?? 'available',
-          image_url: e.image_url,
-          description: e.description,
-          quantity_total: e.quantity_total,
-          quantity_available: e.quantity_available,
-        }));
-        if (!cancelled) setItems(data);
-      } catch (e: any) {
-        if (!cancelled) setError(e.message || "โหลดข้อมูลไม่สำเร็จ");
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    }
     fetchData();
-    return () => { cancelled = true; };
   }, []);
 
   const filtered = useMemo(() => {
@@ -178,7 +177,13 @@ export const BorrowEquipment: React.FC = () => {
     try {
       const currentUser = apiService.getCurrentUser();
       if (!currentUser) {
-        alert('กรุณาเข้าสู่ระบบก่อน');
+        await Swal.fire({
+          icon: 'warning',
+          title: 'กรุณาเข้าสู่ระบบ',
+          text: 'กรุณาเข้าสู่ระบบก่อนทำรายการ',
+          confirmButtonText: 'ตกลง',
+          confirmButtonColor: '#0EA5E9'
+        });
         return;
       }
 
@@ -196,104 +201,112 @@ export const BorrowEquipment: React.FC = () => {
       setSelectedItems([]);
       setShowBorrowModal(false);
       
-      alert('ส่งคำขอยืมเรียบร้อยแล้ว');
+      await Swal.fire({
+        icon: 'success',
+        title: 'สำเร็จ!',
+        text: 'ส่งคำขอยืมเรียบร้อยแล้ว',
+        confirmButtonText: 'ตกลง',
+        confirmButtonColor: '#0EA5E9'
+      });
     } catch (error) {
       console.error('Error creating borrow request:', error);
-      alert('เกิดข้อผิดพลาดในการส่งคำขอ กรุณาลองใหม่อีกครั้ง');
+      await Swal.fire({
+        icon: 'error',
+        title: 'ผิดพลาด',
+        text: 'เกิดข้อผิดพลาดในการส่งคำขอ กรุณาลองใหม่อีกครั้ง',
+        confirmButtonText: 'ตกลง',
+        confirmButtonColor: '#0EA5E9'
+      });
     }
   };
 
   if (loading) {
     return (
-      <div className="flex h-screen bg-gray-50">
-        <Sidebar isCollapsed={sidebarCollapsed} onToggle={toggleSidebar} userRole="user" />
-        <div className="flex-1 flex flex-col overflow-hidden">
-          <div className="flex items-center justify-between p-4 bg-white border-b">
-            <button
-              onClick={toggleSidebar}
-              className="p-2 rounded-md hover:bg-gray-100"
-            >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-              </svg>
-            </button>
-            <h1 className="text-xl font-semibold">ยืมอุปกรณ์</h1>
-          </div>
-          <div className="flex-1 flex items-center justify-center">
-            <div className="text-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
-              <p className="mt-4 text-gray-600">กำลังโหลดข้อมูล...</p>
-            </div>
+      <MainLayout>
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
+            <p className="mt-4 text-gray-600">กำลังโหลดข้อมูล...</p>
           </div>
         </div>
-      </div>
+      </MainLayout>
     );
   }
 
   if (error) {
     return (
-      <div className="flex h-screen bg-gray-50">
-        <Sidebar isCollapsed={sidebarCollapsed} onToggle={toggleSidebar} userRole="user" />
-        <div className="flex-1 flex flex-col overflow-hidden">
-          <div className="flex items-center justify-between p-4 bg-white border-b">
+      <MainLayout>
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-center">
+            <div className="text-red-500 text-6xl mb-4">⚠️</div>
+            <p className="text-red-600 text-lg">{error}</p>
             <button
-              onClick={toggleSidebar}
-              className="p-2 rounded-md hover:bg-gray-100"
+              onClick={fetchData}
+              className="mt-4 px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
             >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-              </svg>
+              ลองใหม่
             </button>
-            <h1 className="text-xl font-semibold">ยืมอุปกรณ์</h1>
-          </div>
-          <div className="flex-1 flex items-center justify-center">
-            <div className="text-center">
-              <div className="text-red-500 text-6xl mb-4">⚠️</div>
-              <p className="text-red-600 text-lg">{error}</p>
-            </div>
           </div>
         </div>
-      </div>
+      </MainLayout>
     );
   }
 
   return (
-    <div className="flex h-screen bg-gray-50">
-      <Sidebar isCollapsed={sidebarCollapsed} onToggle={toggleSidebar} userRole="user" />
+    <MainLayout>
+      <style>
+        {`
+          @keyframes fadeInUp {
+            from {
+              opacity: 0;
+              transform: translateY(20px);
+            }
+            to {
+              opacity: 1;
+              transform: translateY(0);
+            }
+          }
+          .animate-fade-in-up {
+            animation: fadeInUp 0.5s ease-out forwards;
+            opacity: 0;
+          }
+          
+          @keyframes slideInFromRight {
+            from {
+              transform: translateX(100%);
+              opacity: 0;
+            }
+            to {
+              transform: translateX(0);
+              opacity: 1;
+            }
+          }
+          .animate-slide-in-right {
+            animation: slideInFromRight 0.3s ease-out forwards;
+          }
+        `}
+      </style>
       <div className="flex-1 flex flex-col overflow-hidden">
      
 
 
         {/* Main Content */}
-        <div className="flex-1 flex overflow-hidden">
+        <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
           {/* Left Side - Equipment List */}
           <div className="flex-1 flex flex-col overflow-hidden">
             {/* Search and Controls */}
-            <div className="p-4 bg-white border-b">
-              <div className="flex items-center gap-4">
-                <div className="flex-1 flex items-center gap-2">
-                  <div className="relative min-w-[300px] w-full">
-                    <div className="flex">
-                      <span className="inline-flex items-center px-3 rounded-l-2xl border border-r-0 border-gray-300 bg-zinc-100">
-                        <Search className="h-4 w-4 text-gray-500" />
-                      </span>
-                      <input
-                        type="text"
-                        placeholder="ค้นหาอุปกรณ์ตามชื่อ..."
-                        value={query}
-                        onChange={(e) => setQuery(e.target.value)}
-                        className="flex-1 px-3 py-2 border border-gray-300 border-r-0 rounded-r-2xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      />
-                    </div>
-                  </div>
+            <div className="p-2 sm:p-4 bg-white border-b">
+              <div className="flex items-center gap-2">
+                <div className="flex-1">
+                  <SearchInput value={query} onChange={setQuery} placeholder="ค้นหาอุปกรณ์ตามชื่อ..." />
                 </div>
                 
                 {/* ช่องเลือกหมวดหมู่ */}
-                <div className="min-w-[200px]">
+                <div className="min-w-[120px]">
                   <select
                     value={selectedCategory}
                     onChange={(e) => setSelectedCategory(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-1.5 py-1 text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-transparent"
                   >
                     <option value="">ทุกหมวดหมู่</option>
                     {categories.map((category) => (
@@ -306,58 +319,38 @@ export const BorrowEquipment: React.FC = () => {
               </div>
 
               {/* Pagination Controls */}
-              <div className="flex items-center justify-between mt-4">
-                <div className="flex items-center gap-4">
-                  <span className="text-sm text-gray-600">
-                    {totalItems} รายการ
-                  </span>
-                  <select
-                    value={itemsPerPage}
-                    onChange={(e) => {
-                      setItemsPerPage(Number(e.target.value));
-                      setCurrentPage(1);
-                    }}
-                    className="px-3 py-1 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  >
-                    <option value={5}>5 รายการ/หน้า</option>
-                    <option value={10}>10 รายการ/หน้า</option>
-                    <option value={20}>20 รายการ/หน้า</option>
-                    <option value={50}>50 รายการ/หน้า</option>
-                  </select>
-                </div>
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-                    disabled={currentPage === 1}
-                    className="px-3 py-1 border border-gray-300 rounded-md text-sm hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    ก่อนหน้า
-                  </button>
-                  <span className="px-3 py-1 text-sm text-gray-600">
-                    หน้า {currentPage} จาก {totalPages}
-                  </span>
-                  <button
-                    onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-                    disabled={currentPage === totalPages}
-                    className="px-3 py-1 border border-gray-300 rounded-md text-sm hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    ถัดไป
-                  </button>
-                </div>
+              <div className="flex items-center justify-end gap-1.5 mt-2">
+                <PageSizeSelect value={itemsPerPage} onChange={(v)=>{ setItemsPerPage(v); setCurrentPage(1); }} totalItems={totalItems} options={[5,10,20,50]} />
+                <button
+                  onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                  disabled={currentPage === 1}
+                  className="px-1.5 py-0.5 text-xs border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  ก่อนหน้า
+                </button>
+                <span className="px-1.5 text-xs text-gray-600 whitespace-nowrap">หน้า {currentPage} จาก {totalPages}</span>
+                <button
+                  onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                  disabled={currentPage === totalPages}
+                  className="px-1.5 py-0.5 text-xs border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  ถัดไป
+                </button>
               </div>
             </div>
 
             {/* Equipment Grid */}
-            <div className="flex-1 p-4 overflow-auto">
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
-                {paginatedItems.map((item) => {
+            <div className="flex-1 p-1 sm:p-4 overflow-auto">
+              <div className="grid grid-cols-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-1 sm:gap-3">
+                {paginatedItems.map((item, index) => {
                   const isSelected = selectedItems.some(selected => selected.id === item.id);
                   const isAvailable = (item.status === 'available' || item.status === 'limited') && (item.quantity_available || 0) > 0;
                   
                   return (
                     <div
                       key={item.id}
-                      className={`relative ${isSelected ? 'ring-2 ring-blue-500 rounded-xl' : ''} ${!isAvailable ? 'opacity-50' : ''}`}
+                      className={`relative ${isSelected ? 'ring-2 ring-[#0EA5E9] rounded-xl' : ''} ${!isAvailable ? 'opacity-50' : ''} animate-fade-in-up transition-all hover:shadow-lg`}
+                      style={{ animationDelay: `${index * 100}ms` }}
                     >
                       <EquipmentCard
                         name={item.name}
@@ -381,27 +374,38 @@ export const BorrowEquipment: React.FC = () => {
           </div>
 
           {/* Right Side - Selected Items */}
-          <div className="w-80 bg-white border-l flex flex-col">
-            <div className="p-4 border-b">
-              <h2 className="text-lg font-semibold flex items-center gap-2">
-                <ShoppingCart className="h-5 w-5" />
-                รายการอุปกรณ์ที่เลือก ({selectedItems.reduce((sum, item) => sum + item.selected_quantity, 0)} ชิ้น)
-              </h2>
+          <div className="w-full lg:w-80 bg-white border-t lg:border-t-0 lg:border-l flex flex-col">
+            <div className="p-2 sm:p-4 border-b flex flex-col items-center gap-2">
+              <div className="w-full flex items-center justify-between text-xs text-gray-600">
+                <span>จำนวนทั้งหมด</span>
+                <span className="text-[10px] sm:text-xs">
+                  {selectedItems.length} รายการ | {selectedItems.reduce((s, it) => s + it.selected_quantity, 0)} ชิ้น
+                </span>
+              </div>
+              <button
+                onClick={handleBorrowRequest}
+                disabled={selectedItems.length === 0}
+                className="w-full bg-[#0EA5E9] text-white px-2 sm:px-4 py-2 sm:py-4 rounded-lg sm:rounded-xl text-sm sm:text-lg font-semibold hover:bg-[#0284C7] disabled:opacity-50 disabled:cursor-not-allowed"
+                aria-label="ส่งคำขอยืม"
+              >
+                ส่งคำขอยืม
+              </button>
             </div>
             
-            <div className="flex-1 overflow-auto p-4">
-              {selectedItems.length === 0 ? (
-                <div className="text-center text-gray-500 py-8">
-                  <ShoppingCart className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-                  <p>ยังไม่ได้เลือกอุปกรณ์</p>
-                  <p className="text-sm">คลิกที่อุปกรณ์เพื่อเลือก</p>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {selectedItems.map((item) => (
-                    <div key={item.id} className="border rounded-lg p-3 bg-gray-50">
-                      <div className="flex items-start gap-3">
-                        <div className="w-12 h-12 bg-gray-200 rounded-lg flex items-center justify-center flex-shrink-0">
+            <div className="p-2 sm:p-4">
+              <div className="rounded-xl bg-white">
+                {selectedItems.length === 0 ? (
+                  <div className="text-center text-gray-500 py-8 sm:py-10">
+                    <ShoppingCart className="h-10 w-10 sm:h-12 sm:w-12 mx-auto mb-3 sm:mb-4 text-gray-300" />
+                    <p className="text-sm sm:text-base">ยังไม่ได้เลือกอุปกรณ์</p>
+                    <p className="text-xs sm:text-sm">คลิกที่อุปกรณ์เพื่อเลือก</p>
+                  </div>
+                ) : (
+                  <div className="max-h-[400px] sm:max-h-[520px] overflow-y-auto p-2 sm:p-3 space-y-2 sm:space-y-3">
+                    {selectedItems.map((item, index) => (
+                      <div key={item.id} className="border rounded-lg p-2 sm:p-3 bg-[#F0F9FF] animate-slide-in-right transition-all hover:shadow-md" style={{ animationDelay: `${index * 50}ms` }}>
+                        <div className="flex items-start gap-2 sm:gap-3">
+                        <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gray-200 rounded-lg flex items-center justify-center flex-shrink-0">
                           {item.image_url ? (
                             <img
                               src={item.image_url}
@@ -409,64 +413,53 @@ export const BorrowEquipment: React.FC = () => {
                               className="w-full h-full object-cover rounded-lg"
                             />
                           ) : (
-                            <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg className="w-5 h-5 sm:w-6 sm:h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                             </svg>
                           )}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <h3 className="font-medium text-sm truncate">{item.name}</h3>
+                          <h3 className="font-medium text-xs sm:text-sm truncate">{item.name}</h3>
                           <p className="text-xs text-gray-500">{item.category}</p>
                           <p className="text-xs text-gray-600 mt-1">
                             คงเหลือ: {item.quantity_available} ชิ้น
                           </p>
                           
                           {/* ปุ่มควบคุมจำนวน */}
-                          <div className="flex items-center gap-2 mt-2">
+                          <div className="flex items-center gap-1 sm:gap-2 mt-2">
                             <button
                               onClick={() => handleDecreaseQuantity(item.id)}
-                              className="w-6 h-6 bg-gray-200 hover:bg-gray-300 rounded-full flex items-center justify-center text-xs"
+                              className="w-5 h-5 sm:w-6 sm:h-6 bg-gray-200 hover:bg-gray-300 rounded-full flex items-center justify-center text-xs"
                             >
                               -
                             </button>
-                            <span className="text-sm font-medium min-w-[20px] text-center">
+                            <span className="text-xs sm:text-sm font-medium min-w-[16px] sm:min-w-[20px] text-center">
                               {item.selected_quantity}
                             </span>
                             <button
                               onClick={() => handleIncreaseQuantity(item.id, item.quantity_available || 0)}
                               disabled={item.selected_quantity >= (item.quantity_available || 0)}
-                              className="w-6 h-6 bg-gray-200 hover:bg-gray-300 rounded-full flex items-center justify-center text-xs disabled:opacity-50 disabled:cursor-not-allowed"
+                              className="w-5 h-5 sm:w-6 sm:h-6 bg-gray-200 hover:bg-gray-300 rounded-full flex items-center justify-center text-xs disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                               +
                             </button>
                           </div>
                         </div>
-                        <button
-                          onClick={() => handleRemoveSelected(item.id)}
-                          className="text-red-500 hover:text-red-700 p-1"
-                        >
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                          </svg>
-                        </button>
+                          <button
+                            onClick={() => handleRemoveSelected(item.id)}
+                            className="text-red-500 hover:text-red-700 p-1 flex-shrink-0"
+                            aria-label="ลบรายการ"
+                          >
+                            <Trash2 className="w-3 h-3 sm:w-4 sm:h-4" />
+                          </button>
+                        </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
-              )}
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
-
-            {/* Borrow Button */}
-            <div className="p-4 border-t bg-gray-50">
-              <button
-                onClick={handleBorrowRequest}
-                disabled={selectedItems.length === 0}
-                className="w-full bg-blue-500 text-white py-3 px-4 rounded-lg hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-              >
-                <Send className="h-5 w-5" />
-                ส่งคำขอยืม ({selectedItems.reduce((sum, item) => sum + item.selected_quantity, 0)} ชิ้น)
-              </button>
-            </div>
+            
           </div>
         </div>
       </div>
@@ -478,7 +471,7 @@ export const BorrowEquipment: React.FC = () => {
         selectedItems={selectedItems}
         onSubmit={handleSubmitBorrowRequest}
       />
-    </div>
+    </MainLayout>
   );
 };
 

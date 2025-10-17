@@ -83,15 +83,15 @@ function createPending(PDO $conn, array $input) {
     Response::error('ชื่อ-นามสกุลต้องมีอย่างน้อย 2 ตัวอักษร', 400);
   }
   if (!Security::validateEmail($email)) {
-    Response::error('รูปแบบอีเมลไม่ถูกต้อง (s + รหัส 13 หลัก + @kmutnb.ac.th)', 400);
+    Response::error('รูปแบบอีเมลไม่ถูกต้อง (รหัส 12 หลัก + -st@rmutsb.ac.th)', 400);
   }
   if (!Security::validateStudentId($student_id)) {
-    Response::error('รูปแบบรหัสนักศึกษาไม่ถูกต้อง (s + รหัส 13 หลัก)', 400);
+    Response::error('รูปแบบรหัสนักศึกษาไม่ถูกต้อง (รหัส 12 หลัก)', 400);
   }
   if (strlen($password) < 6) {
     Response::error('รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร', 400);
   }
-  $email_sid = substr($email, 0, 14);
+  $email_sid = substr($email, 0, 12);
   if ($email_sid !== $student_id) {
     Response::error('รหัสนักศึกษาในอีเมลไม่ตรงกับรหัสนักศึกษาที่กรอก', 400);
   }

@@ -1,18 +1,20 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Sidebar } from '../../components/Layout/Sidebar';
+import { MainLayout } from '../../components/Layout';
 import { apiService, type PendingRegistration } from '../../services/api';
-import { Search, Check, X, RefreshCcw, CheckSquare, Square } from 'lucide-react';
+import { Check, X, CheckSquare, Square, Inbox } from 'lucide-react';
+import SearchInput from '../../components/ui/SearchInput';
+import PageSizeSelect from '../../components/ui/PageSizeSelect';
 import Swal from 'sweetalert2';
 
 export const PendingRegistrations: React.FC = () => {
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [requests, setRequests] = useState<PendingRegistration[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [query, setQuery] = useState('');
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
-
-  const toggleSidebar = () => setSidebarCollapsed(v => !v);
+  // Pagination
+  const [itemsPerPage, setItemsPerPage] = useState<number>(50);
+  const [currentPage, setCurrentPage] = useState<number>(1);
 
   const fetchData = async () => {
     try {
@@ -38,6 +40,13 @@ export const PendingRegistrations: React.FC = () => {
     if (!q) return requests;
     return requests.filter(r => [r.student_id, r.fullname, r.email].some(v => String(v).toLowerCase().includes(q)));
   }, [requests, query]);
+
+  const totalItems = filtered.length;
+  const totalPages = Math.ceil(totalItems / itemsPerPage) || 1;
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginated = filtered.slice(startIndex, endIndex);
+  React.useEffect(() => { setCurrentPage(1); }, [query]);
 
   // const allSelected = filtered.length > 0 && filtered.every(r => selectedIds.includes(r.id));
 
@@ -92,33 +101,15 @@ export const PendingRegistrations: React.FC = () => {
   };
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
-      <Sidebar isCollapsed={sidebarCollapsed} onToggle={toggleSidebar} userRole={'admin'} />
-      <main className={`flex-1 transition-all duration-300 ${sidebarCollapsed ? 'ml-0' : 'ml-0'}`}>
-        <div className="min-h-screen p-4">
+    <MainLayout>
+      <div className="min-h-screen p-4">
           <div className="mx-auto max-w-6xl space-y-4">
             {/* Header with search and actions */}
             <div className="flex items-center justify-between gap-3">
               <div className="flex-1 flex items-center gap-2">
-                <div className="relative min-w-[300px] w-full">
-                  <div className="flex">
-                    <span className="inline-flex items-center px-3 rounded-l-2xl border border-r-0 border-gray-300 bg-zinc-100">
-                      <Search className="h-4 w-4 text-gray-500" />
-                    </span>
-                    <input
-                      type="text"
-                      placeholder="ค้นหา รหัส | ชื่อ-นามสกุล | อีเมล"
-                      value={query}
-                      onChange={(e) => setQuery(e.target.value)}
-                      className="flex-1 px-3 py-2 border border-gray-300 border-r-0 rounded-r-2xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    />
-                  </div>
-                </div>
+                <SearchInput value={query} onChange={setQuery} placeholder="ค้นหา รหัส | ชื่อ-นามสกุล | อีเมล" />
               </div>
               <div className="flex items-center gap-2">
-                <button className="px-3 py-2 text-sm rounded-md border bg-white hover:bg-gray-50 flex items-center gap-2" onClick={fetchData}>
-                  <RefreshCcw className="w-4 h-4" /> รีเฟรช
-                </button>
                 <button className="px-3 py-2 text-sm rounded-md bg-[#0EA5E9] text-white hover:bg-emerald-700 flex items-center gap-2" onClick={() => handleApprove(selectedIds)}>
                   <Check className="w-4 h-4" /> อนุมัติที่เลือก
                 </button>
@@ -131,16 +122,42 @@ export const PendingRegistrations: React.FC = () => {
               </div>
             </div>
 
+            {/* Pagination Controls */}
+            <div className="flex items-center justify-between">
+              <div className="text-sm text-gray-600">{totalItems} รายการ</div>
+              <div className="flex items-center gap-2">
+                <PageSizeSelect value={itemsPerPage} onChange={(v)=>{setItemsPerPage(v); setCurrentPage(1);}} totalItems={totalItems} options={[5,10,15,20,50]} />
+                <button
+                  onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                  disabled={currentPage === 1}
+                  className="px-2 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  ก่อนหน้า
+                </button>
+                <span className="px-2 text-sm text-gray-600">หน้า {currentPage} จาก {totalPages}</span>
+                <button
+                  onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                  disabled={currentPage === totalPages}
+                  className="px-2 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  ถัดไป
+                </button>
+              </div>
+            </div>
+
             {/* Cards */}
             {loading ? (
               <div className="p-6 text-sm text-gray-500 bg-white rounded-xl border">กำลังโหลดคำขอ...</div>
             ) : error ? (
               <div className="p-6 text-sm text-red-600 bg-white rounded-xl border">{error}</div>
             ) : filtered.length === 0 ? (
-              <div className="p-6 text-sm text-gray-500 bg-white rounded-xl border">ไม่พบคำขอที่ตรงกับคำค้นหา</div>
+              <div className="p-12 bg-white rounded-xl border text-center text-gray-600">
+                <Inbox className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+                <div className="text-sm">ไม่พบคำขอที่ตรงกับคำค้นหา</div>
+              </div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {filtered.map(req => {
+                {paginated.map(req => {
                   const selected = selectedIds.includes(req.id);
                   return (
                     <div key={req.id} className={`border rounded-xl p-4 bg-white ${selected ? 'ring-2 ring-blue-500' : ''}`}>
@@ -171,8 +188,7 @@ export const PendingRegistrations: React.FC = () => {
             )}
           </div>
         </div>
-      </main>
-    </div>
+    </MainLayout>
   );
 };
 

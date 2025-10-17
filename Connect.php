@@ -203,14 +203,14 @@ class Security {
      * ตรวจสอบรูปแบบรหัสนักศึกษา
      */
     public static function validateStudentId($studentId) {
-        return preg_match('/^s\d{13}$/', $studentId);
+        return preg_match('/^\d{12}$/', $studentId);
     }
 
     /**
      * ตรวจสอบรูปแบบอีเมล
      */
     public static function validateEmail($email) {
-        return preg_match('/^s\d{13}@kmutnb\.ac\.th$/', $email);
+        return preg_match('/^\d{12}-st@rmutsb\.ac\.th$/', $email);
     }
 }
 

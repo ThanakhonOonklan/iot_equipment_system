@@ -1,8 +1,4 @@
 <?php
-/**
- * API สำหรับระบบ Login
- * Login API for IoT Equipment Borrowing System
- */
 
 require_once '../Connect.php';
 
@@ -12,22 +8,19 @@ header('Access-Control-Allow-Methods: POST, OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type, Authorization');
 header('Content-Type: application/json; charset=utf-8');
 
-// จัดการ OPTIONS Request
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     http_response_code(200);
     exit;
 }
 
-// ตรวจสอบว่าเป็น POST Request หรือไม่
+
 if (!Input::isPost()) {
     Response::error('ต้องใช้ POST Request เท่านั้น', 405);
 }
 
 try {
-    // ดึงข้อมูลจาก Request Body
     $input = Input::json();
     
-    // ตรวจสอบข้อมูลที่จำเป็น
     if (!isset($input['student_id']) || !isset($input['password'])) {
         Response::error('กรุณากรอกรหัสนักศึกษาและรหัสผ่าน', 400);
     }
@@ -35,21 +28,17 @@ try {
     $student_id = Security::sanitize($input['student_id']);
     $password = $input['password'];
     
-    // ตรวจสอบรูปแบบรหัสนักศึกษา
     if (!Security::validateStudentId($student_id)) {
-        Response::error('รูปแบบรหัสนักศึกษาไม่ถูกต้อง (s + รหัส 13 หลัก)', 400);
+        Response::error('รูปแบบรหัสนักศึกษาไม่ถูกต้อง (รหัส 12 หลัก)', 400);
     }
     
-    // ตรวจสอบความยาวรหัสผ่าน
     if (strlen($password) < 6) {
         Response::error('รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร', 400);
     }
     
-    // เชื่อมต่อฐานข้อมูล
     $database = new Database();
     $conn = $database->getConnection();
     
-    // ค้นหาผู้ใช้ (ไม่ต้องเช็ค status ก่อน)
     $query = "SELECT id, student_id, email, fullname, password, role, status 
               FROM users 
               WHERE student_id = :student_id";

@@ -148,7 +148,7 @@ function updateBorrowing(PDO $conn, array $input) {
       $upd->bindParam(':id', $id, PDO::PARAM_INT);
       $upd->execute();
       
-      // Update equipment quantity
+
       $upd_eq = $conn->prepare('UPDATE equipment SET quantity_available = quantity_available + 1 WHERE id = :id');
       $upd_eq->bindParam(':id', $borrowing['equipment_id'], PDO::PARAM_INT);
       $upd_eq->execute();

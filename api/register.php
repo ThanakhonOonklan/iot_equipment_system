@@ -55,12 +55,12 @@ try {
     
     // ตรวจสอบรูปแบบอีเมล
     if (!Security::validateEmail($email)) {
-        Response::error('รูปแบบอีเมลไม่ถูกต้อง (s + รหัส 13 หลัก + @kmutnb.ac.th)', 400);
+        Response::error('รูปแบบอีเมลไม่ถูกต้อง (รหัส 12 หลัก + -st@rmutsb.ac.th)', 400);
     }
     
     // ตรวจสอบรูปแบบรหัสนักศึกษา
     if (!Security::validateStudentId($student_id)) {
-        Response::error('รูปแบบรหัสนักศึกษาไม่ถูกต้อง (s + รหัส 13 หลัก)', 400);
+        Response::error('รูปแบบรหัสนักศึกษาไม่ถูกต้อง (รหัส 12 หลัก)', 400);
     }
     
     // ตรวจสอบความยาวรหัสผ่าน
@@ -74,7 +74,7 @@ try {
     }
     
     // ตรวจสอบว่ารหัสนักศึกษาในอีเมลตรงกับรหัสนักศึกษาที่กรอก
-    $email_student_id = substr($email, 0, 14); // s + 13 หลัก
+    $email_student_id = substr($email, 0, 12); // 12 หลัก
     if ($email_student_id !== $student_id) {
         Response::error('รหัสนักศึกษาในอีเมลไม่ตรงกับรหัสนักศึกษาที่กรอก', 400);
     }
@@ -100,6 +100,13 @@ try {
     $check_email_stmt->execute();
     
     if ($check_email_stmt->fetch()) {
+    // ตรวจสอบว่ารหัสนักศึกษาหรืออีเมลซ้ำหรือไม่ (รวมเป็น Query เดียว)
+    $check_query = "SELECT id FROM users WHERE student_id = :student_id OR email = :email LIMIT 1";
+    $check_stmt = $conn->prepare($check_query);
+    $check_stmt->bindParam(':student_id', $student_id, PDO::PARAM_STR);
+    $check_stmt->bindParam(':email', $email, PDO::PARAM_STR);
+    $check_stmt->execute();
+    if ($check_stmt->fetch()) {
         Response::error('อีเมลนี้มีผู้ใช้งานแล้ว', 409);
     }
     
@@ -141,6 +148,9 @@ try {
             'role' => $new_user['role'],
             'status' => $new_user['status'],
             'created_at' => $new_user['created_at']
+            'id' => $user_id,
+            'student_id' => $student_id,
+            'email' => $email
         ],
         'message' => 'สมัครสมาชิกสำเร็จ คุณสามารถเข้าสู่ระบบได้แล้ว'
     ];

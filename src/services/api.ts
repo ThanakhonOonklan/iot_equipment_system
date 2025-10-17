@@ -147,6 +147,68 @@ export interface ListPendingResponse {
   data: { requests: PendingRegistration[] };
 }
 
+// Return Equipment types
+export interface Borrower {
+  borrowing_id: number;
+  user_id: number;
+  fullname: string;
+  student_id: string;
+  borrow_date: string;
+  due_date: string;
+  total_items: number;
+  unique_equipment: number;
+  status: 'normal' | 'warning' | 'overdue';
+  days_remaining: number;
+}
+
+export interface BorrowedItem {
+  equipment_id: number;
+  equipment_name: string;
+  category: string;
+  image_url?: string;
+  quantity_borrowed: number;
+  borrow_date: string;
+  due_date: string;
+  borrowing_ids: string;
+}
+
+export interface BorrowerDetails {
+  user: {
+    id: number;
+    fullname: string;
+    student_id: string;
+    email: string;
+  };
+  items: BorrowedItem[];
+}
+
+export interface ReturnItem {
+  equipment_id: number;
+  quantity_returned: number;
+  quantity_damaged: number;
+  quantity_lost: number;
+  notes?: string;
+}
+
+export interface ReturnEquipmentRequest {
+  borrowing_id: number;
+  staff_id?: number;
+  staff_name?: string;
+  items: ReturnItem[];
+}
+
+export interface ListBorrowersResponse {
+  success: boolean;
+  message: string;
+  data: { borrowers: Borrower[] };
+}
+
+export interface BorrowerDetailsResponse {
+  success: boolean;
+  message: string;
+  data: BorrowerDetails;
+}
+
 class ApiService {
   private baseURL: string;
 
@@ -383,6 +445,28 @@ class ApiService {
     localStorage.setItem('user', JSON.stringify(user));
     localStorage.setItem('token', token);
     localStorage.setItem('login_time', loginTime);
+  }
+
+  /**
+   * Return Equipment APIs
+   */
+  async listActiveBorrowers(): Promise<ListBorrowersResponse> {
+    return this.request<ListBorrowersResponse>('/return_equipment.php', {
+      method: 'GET',
+    });
+  }
+
+  async getBorrowerDetails(borrowingId: number): Promise<BorrowerDetailsResponse> {
+    return this.request<BorrowerDetailsResponse>(`/return_equipment.php?borrowing_id=${borrowingId}`, {
+      method: 'GET',
+    });
+  }
+
+  async returnEquipment(data: ReturnEquipmentRequest): Promise<{ success: boolean; message: string; data: any }> {
+    return this.request<{ success: boolean; message: string; data: any }>('/return_equipment.php', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
   }
 }
 

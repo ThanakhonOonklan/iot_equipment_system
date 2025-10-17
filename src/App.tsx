@@ -1,5 +1,6 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
+import { LoadingProvider } from './contexts/LoadingContext';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { AuthGuard } from './components/AuthGuard';
 import { Login } from './screens/Login';
@@ -11,12 +12,14 @@ import { BorrowEquipment } from './screens/BorrowEquipment';
 import PendingRegistrations from './screens/PendingRegistrations';
 import BorrowRequests from './screens/BorrowRequests';
 import History from './screens/History';
+import { ReturnEquipment } from './screens/ReturnEquipment';
 
 function App() {
   return (
     <AuthProvider>
-      <Router>
-        <Routes>
+      <LoadingProvider>
+        <Router>
+          <Routes>
           <Route path="/" element={<Navigate to="/login" replace />} />
           <Route 
             path="/login" 
@@ -90,8 +93,17 @@ function App() {
               </ProtectedRoute>
             }
           />
+          <Route
+            path="/return-equipment"
+            element={
+              <ProtectedRoute>
+                <ReturnEquipment />
+              </ProtectedRoute>
+            }
+          />
         </Routes>
-      </Router>
+        </Router>
+      </LoadingProvider>
     </AuthProvider>
   );
 }
