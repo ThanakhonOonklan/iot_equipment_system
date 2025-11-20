@@ -48,6 +48,8 @@ function listBorrowRequests($conn) {
             br.borrow_date,
             br.return_date,
             br.status,
+            br.approver_id,
+            br.approver_name,
             br.notes,
             br.created_at,
             br.updated_at

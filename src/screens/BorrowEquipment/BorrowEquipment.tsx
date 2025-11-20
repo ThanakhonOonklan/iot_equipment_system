@@ -208,6 +208,8 @@ export const BorrowEquipment: React.FC = () => {
         confirmButtonText: 'ตกลง',
         confirmButtonColor: '#0EA5E9'
       });
+
+      
     } catch (error) {
       console.error('Error creating borrow request:', error);
       await Swal.fire({
@@ -340,14 +342,15 @@ export const BorrowEquipment: React.FC = () => {
             </div>
 
             {/* Equipment Grid */}
-            <div className="flex-1 p-1 sm:p-4 overflow-auto">
-              <div className="grid grid-cols-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-1 sm:gap-3">
+            <div className="flex-1 p-1 sm:p-4">
+              <div className="h-[600px] overflow-y-auto border border-gray-200 rounded-lg bg-gray-50 p-2">
+                <div className="grid grid-cols-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-1 sm:gap-3">
                 {paginatedItems.map((item, index) => {
                   const isSelected = selectedItems.some(selected => selected.id === item.id);
                   const isAvailable = (item.status === 'available' || item.status === 'limited') && (item.quantity_available || 0) > 0;
                   
                   return (
-                    <div
+                    <div  
                       key={item.id}
                       className={`relative ${isSelected ? 'ring-2 ring-[#0EA5E9] rounded-xl' : ''} ${!isAvailable ? 'opacity-50' : ''} animate-fade-in-up transition-all hover:shadow-lg`}
                       style={{ animationDelay: `${index * 100}ms` }}
@@ -369,6 +372,7 @@ export const BorrowEquipment: React.FC = () => {
                     </div>
                   );
                 })}
+                </div>
               </div>
             </div>
           </div>

@@ -128,7 +128,6 @@ export const Users: React.FC = () => {
                 <table className="min-w-full text-sm">
                   <thead className="bg-gray-50 text-left text-gray-600">
                     <tr>
-                      <th className="px-4 py-3">ลำดับ</th>
                       <th className="px-4 py-3">รหัสนักศึกษา</th>
                       <th className="px-4 py-3">ชื่อ-นามสกุล</th>
                       <th className="px-4 py-3">อีเมลมหาวิทยาลัย</th>
@@ -154,7 +153,6 @@ export const Users: React.FC = () => {
                           setShowEdit(true);
                         }}
                       >
-                        <td className="px-4 py-3 text-gray-700">{u.id}</td>
                         <td className="px-4 py-3 text-gray-700">
                           {u.student_id}
                         </td>
@@ -186,7 +184,7 @@ export const Users: React.FC = () => {
                     ))}
                     {paginatedUsers.length === 0 && (
                       <tr>
-                        <td colSpan={6} className="px-4 py-10 text-center text-gray-600">
+                        <td colSpan={5} className="px-4 py-10 text-center text-gray-600">
                           <div className="flex flex-col items-center justify-center">
                             <Inbox className="w-12 h-12 text-gray-300 mb-3" />
                             <div className="text-sm">ไม่พบข้อมูลสมาชิก</div>
@@ -289,14 +287,10 @@ export const Users: React.FC = () => {
                     confirmButtonColor: '#0EA5E9'
                   });
 
-                  // Broadcast suspension to all tabs if target user was suspended
+                  // ตรวจสอบการระงับบัญชี
                   const updated = usersRes.data.users.find((u: User) => u.id === editUser!.id);
                   if (updated && updated.status === 'suspended') {
-                    try {
-                      localStorage.setItem('user-suspended', JSON.stringify({ userId: updated.id, t: Date.now() }));
-                      // clear key to allow re-trigger in future
-                      localStorage.removeItem('user-suspended');
-                    } catch {}
+                    // ถ้าผู้ใช้ที่ถูกระงับคือผู้ใช้ปัจจุบัน - ออกจากระบบทันที
                     if (currentUser && updated.id === currentUser.id) {
                       await Swal.fire({
                         title: 'บัญชีถูกระงับ',
@@ -307,6 +301,7 @@ export const Users: React.FC = () => {
                       });
                       logout();
                       navigate('/login');
+                      return;
                     }
                   }
                   } catch (e: any) {

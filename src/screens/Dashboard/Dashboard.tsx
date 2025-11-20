@@ -70,20 +70,6 @@ export const Dashboard: React.FC = () => {
     fetchStats();
   }, []);
 
-  // Poll pending registrations for admin
-  const [pending, setPending] = useState<any[]>([]);
-  useEffect(() => {
-    let timer: any;
-    const fetchPending = async () => {
-      try {
-        const res = await apiService.listPendingRegistrations();
-        setPending(res.data.requests);
-      } catch {}
-    };
-    fetchPending();
-    timer = setInterval(fetchPending, 8000);
-    return () => clearInterval(timer);
-  }, []);
 
   // Borrow requests for chart, today count, recent activities
   const [requests, setRequests] = useState<any[]>([]);
@@ -99,27 +85,47 @@ export const Dashboard: React.FC = () => {
     return () => clearInterval(t);
   }, []);
 
-  const todayCount = useMemo(() => {
-    const t = new Date();
-    const y = t.getFullYear();
-    const m = t.getMonth();
-    const d = t.getDate();
-    return requests.filter(r => {
-      const dt = new Date(r.request_date);
-      return dt.getFullYear() === y && dt.getMonth() === m && dt.getDate() === d;
-    }).length;
-  }, [requests]);
+  // Equipment statistics
+  const [mostBorrowed, setMostBorrowed] = useState<any[]>([]);
+  const [mostDamaged, setMostDamaged] = useState<any[]>([]);
+  const [statsLoading, setStatsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        setStatsLoading(true);
+        const [borrowedRes, damagedRes] = await Promise.all([
+          apiService.getMostBorrowedEquipment(5),
+          apiService.getMostDamagedEquipment(5)
+        ]);
+        setMostBorrowed(borrowedRes.data.equipment || []);
+        setMostDamaged(damagedRes.data.equipment || []);
+      } catch (error) {
+        console.error('Error fetching equipment stats:', error);
+      } finally {
+        setStatsLoading(false);
+      }
+    };
+    fetchStats();
+  }, []);
 
 
-  // Build daily counts for last 14 days
+
+  // Build daily counts for last 15 days
   const lineData = useMemo(() => {
-    const days = 14;
+    const days = 15;
     const result: { label: string; value: number; date: Date }[] = [];
     const now = new Date();
+    
+    // Month abbreviations in Thai
+    const monthAbbr = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
+    
     for (let i = days - 1; i >= 0; i--) {
       const d = new Date(now);
       d.setDate(now.getDate() - i);
-      const label = `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}`;
+      const day = String(d.getDate()).padStart(2, '0');
+      const month = monthAbbr[d.getMonth()];
+      const label = `${day} ${month}`;
       const count = requests.filter(r => {
         const dt = new Date(r.request_date);
         return dt.getFullYear() === d.getFullYear() && dt.getMonth() === d.getMonth() && dt.getDate() === d.getDate();
@@ -209,11 +215,11 @@ export const Dashboard: React.FC = () => {
         </div>
         <div className="animate-fade-in-up" style={{ animationDelay: '200ms' }}>
           <StatsCard
-            title="คำขอสมัครที่รออนุมัติ"
-            value={pending.length}
+            title="คำขอยืมที่รออนุมัติ"
+            value={requests.filter(r => r.status === 'pending').length}
             icon={UserPlus}
             color="#F59E0B"
-            onClick={() => navigate('/pending-registrations')}
+            onClick={() => navigate('/borrow-requests')}
           />
         </div>
         <div className="animate-fade-in-up" style={{ animationDelay: '300ms' }}>
@@ -228,40 +234,120 @@ export const Dashboard: React.FC = () => {
       </div>
 
       {/* Additional Stats */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Latest Activities - Borrow Requests and Returns */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 animate-fade-in-scale" style={{ animationDelay: '400ms' }}>
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">กิจกรรมล่าสุด (คำขอยืม-คืน)</h3>
-          <div className="space-y-3 max-h-72 overflow-auto">
-            {requests.slice(0, 20).map((r) => (
-              <div key={r.id} className="text-sm text-gray-700 flex items-center justify-between">
-                <span className="truncate">
-                  {r.fullname} {r.status === 'approved' ? 'กำลังยืมอยู่' : 'ส่งคำขอยืม'} • {new Date(r.request_date).toLocaleString()}
-                </span>
-                <span className={`text-xs rounded-full px-2 py-0.5 ${
-                  r.status === 'pending' 
-                    ? 'bg-yellow-100 text-yellow-700' 
-                    : r.status === 'approved' 
-                      ? 'bg-yellow-100 text-yellow-700' 
-                      : 'bg-red-100 text-red-700'
-                }`}>
-                  {r.status === 'pending' ? 'รออนุมัติ' : 
-                   r.status === 'approved' ? 'กำลังยืมอยู่' : 'ปฏิเสธ'}
-                </span>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Combined chart - daily borrow requests (last 15 days) */}
+        <div className="lg:col-span-2 bg-white rounded-xl shadow-sm border border-gray-100 p-6 animate-fade-in-scale" style={{ animationDelay: '400ms' }}>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+              <TrendingUp className="h-5 w-5 text-blue-500" /> คำขอรายวัน (15 วัน)
+            </h3>
+            <div className="text-sm text-gray-600">รวม: {lineData.reduce((s, d) => s + d.value, 0)} คำขอ</div>
               </div>
-            ))}
-            {requests.length === 0 && <div className="text-sm text-gray-500">ยังไม่มีกิจกรรม</div>}
+          {/* Combined SVG chart (bars + line) */}
+          <div className="w-full h-64">
+            {(() => {
+              const width = 800; const height = 256; const pad = 15;
+              const data = lineData; const max = Math.max(1, ...data.map(d => d.value));
+              const barWidth = (width - pad * 2) / data.length * 0.95;
+              const stepX = (width - pad * 2) / data.length;
+              
+              
+              return (
+                <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-full">
+                  {/* Grid lines */}
+                  {[0, 0.25, 0.5, 0.75, 1].map((ratio, i) => {
+                    const y = height - pad - ratio * (height - pad * 2);
+                    return (
+                      <g key={i}>
+                        <line x1={pad} y1={y} x2={width - pad} y2={y} stroke="#E5E7EB" strokeWidth="1" />
+                        <text x={pad - 5} y={y + 3} fontSize="9" textAnchor="end" fill="#9CA3AF">
+                          {Math.round(max * ratio)}
+                        </text>
+                      </g>
+                    );
+                  })}
+                  
+                  
+                  {/* Bars */}
+                  {data.map((d, i) => {
+                    const x = pad + i * stepX + (stepX - barWidth) / 2;
+                    const barHeight = (d.value / max) * (height - pad * 2);
+                    const y = height - pad - barHeight;
+                    const isToday = i === data.length - 1;
+                    
+                    return (
+                      <g key={i}>
+                        <rect
+                          x={x}
+                          y={y}
+                          width={barWidth}
+                          height={barHeight}
+                          fill={isToday ? "#21a0dc" : "#21a0dc"}
+                          rx="2"
+                          ry="2"
+                          className="hover:opacity-80 transition-opacity"
+                          opacity="0.7"
+                        />
+                        {/* Value label on top of bar */}
+                        {d.value > 0 && (
+                          <text
+                            x={x + barWidth / 2}
+                            y={y - 5}
+                            fontSize="8"
+                            textAnchor="middle"
+                            fill="#374151"
+                            fontWeight="500"
+                          >
+                            {d.value}
+                          </text>
+                        )}
+                      </g>
+                    );
+                  })}
+                  
+                  {/* X labels */}
+                  {data.map((d, i) => (
+                    <text 
+                      key={`t${i}`} 
+                      x={pad + i * stepX + stepX / 2} 
+                      y={height - 8} 
+                      fontSize="9" 
+                      textAnchor="middle" 
+                      fill="#6B7280"
+                    >
+                      {d.label}
+                    </text>
+                  ))}
+                  
+                </svg>
+              );
+            })()}
           </div>
         </div>
 
         {/* Calendar (current month) + today count */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 animate-fade-in-scale" style={{ animationDelay: '500ms' }}>
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 animate-fade-in-scale" style={{ animationDelay: '500ms' }}>
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
               <CalendarIcon className="h-5 w-5 text-purple-500" />
-              ปฏิทินคำขอ (เดือนปัจจุบัน)
+              ปฏิทินคำขอยืม
             </h3>
-            <div className="text-sm text-gray-600">วันนี้: <span className="font-semibold text-emerald-600">{todayCount}</span> คำขอ</div>
+            <div className="text-sm text-gray-600">
+              {(() => {
+                const now = new Date();
+                const day = now.getDate();
+                const monthNames = ['มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน', 
+                                   'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'];
+                const month = monthNames[now.getMonth()];
+                const year = now.getFullYear() + 543; // Convert to Buddhist Era
+                const time = now.toLocaleTimeString('th-TH', { 
+                  hour: '2-digit', 
+                  minute: '2-digit',
+                  hour12: false 
+                });
+                return `วันที่ ${day} ${month} ${year} เวลา ${time} น.`;
+              })()}
+            </div>
           </div>
           <div className="grid grid-cols-7 gap-2 text-center text-xs text-gray-500 mb-2">
             {['อา','จ','อ','พ','พฤ','ศ','ส'].map(d => <div key={d}>{d}</div>)}
@@ -276,7 +362,7 @@ export const Dashboard: React.FC = () => {
               return (
                 <div 
                   key={idx} 
-                  className={`h-16 rounded-lg border flex flex-col items-center justify-center transition-all duration-200 cursor-pointer ${
+                  className={`h-12 rounded-lg border flex flex-col items-center justify-center transition-all duration-200 cursor-pointer ${
                     cell.day 
                       ? `border-gray-200 ${isToday ? 'bg-[#0EA5E9] text-white' : 'bg-gray-50 hover:bg-blue-50 hover:border-blue-300'}`
                       : 'border-transparent'
@@ -291,10 +377,10 @@ export const Dashboard: React.FC = () => {
                 >
                   {cell.day && (
                     <>
-                      <div className={`text-sm ${isToday ? 'text-white font-bold' : 'text-gray-700'}`}>
+                      <div className={`text-xs ${isToday ? 'text-white font-bold' : 'text-gray-700'}`}>
                         {cell.day}
                       </div>
-                      <div className={`text-xs ${
+                      <div className={`text-[10px] ${
                         isToday 
                           ? 'text-white font-semibold' 
                           : hasRequests 
@@ -313,54 +399,149 @@ export const Dashboard: React.FC = () => {
         </div>
       </div>
 
-      {/* Line chart - daily borrow requests (last 14 days) */}
+      {/* Latest Activities - Borrow Requests and Returns */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 animate-fade-in-up" style={{ animationDelay: '600ms' }}>
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-            <TrendingUp className="h-5 w-5 text-blue-500" /> คำขอรายวัน (14 วัน)
-          </h3>
-          <div className="text-sm text-gray-600">รวม: {lineData.reduce((s, d) => s + d.value, 0)} คำขอ</div>
-        </div>
-        {/* simple SVG line chart */}
-        <div className="w-full h-48">
-          {(() => {
-            const width = 800; const height = 160; const pad = 30;
-            const data = lineData; const max = Math.max(1, ...data.map(d => d.value));
-            const stepX = (width - pad * 2) / (data.length - 1 || 1);
-            const points = data.map((d, i) => {
-              const x = pad + i * stepX; const y = height - pad - (d.value / max) * (height - pad * 2);
-              return `${x},${y}`;
-            }).join(' ');
-            return (
-              <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-full">
-                <polyline fill="none" stroke="#0EA5E9" strokeWidth="3" points={points} />
-                {data.map((d, i) => {
-                  const x = pad + i * stepX; const y = height - pad - (d.value / max) * (height - pad * 2);
-                  return <circle key={i} cx={x} cy={y} r={3} fill="#0EA5E9" />;
-                })}
-                {/* X labels */}
-                {data.map((d, i) => (
-                  <text key={`t${i}`} x={pad + i * stepX} y={height - 8} fontSize="10" textAnchor="middle" fill="#6B7280">{d.label}</text>
-                ))}
-                {/* Y axis */}
-                <text x={4} y={12} fontSize="10" fill="#6B7280">สูงสุด {max}</text>
-              </svg>
-            );
-          })()}
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">กิจกรรมล่าสุด (คำขอยืม-คืน)</h3>
+        <div className="space-y-3 max-h-72 overflow-auto">
+          {requests.slice(0, 20).map((r) => (
+            <div key={r.id} className="text-sm text-gray-700 flex items-center justify-between">
+                <span className="truncate">
+                  {r.fullname} <span className={`font-medium ${
+                    r.status === 'pending' 
+                      ? 'text-yellow-600' 
+                      : r.status === 'approved' 
+                        ? 'text-green-600' 
+                        : 'text-red-600'
+                  }`}>
+                    {r.status === 'pending' ? 'รออนุมัติ' : 
+                     r.status === 'approved' ? 'กำลังยืมอยู่' : 'ปฏิเสธ'}
+                  </span> • {(() => {
+                    const date = new Date(r.request_date);
+                    const day = date.getDate();
+                    const monthAbbr = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
+                    const month = monthAbbr[date.getMonth()];
+                    const year = date.getFullYear() + 543; // Convert to Buddhist Era
+                    const time = date.toLocaleTimeString('th-TH', { 
+                      hour: '2-digit', 
+                      minute: '2-digit',
+                      hour12: false 
+                    });
+                    return `วันที่ ${day} ${month} ${year} ${time} น.`;
+                  })()}
+                </span>
+              <span className={`text-xs rounded-full px-2 py-0.5 ${
+                r.status === 'pending' 
+                  ? 'bg-yellow-100 text-yellow-700' 
+                  : r.status === 'approved' 
+                    ? 'bg-green-100 text-green-700' 
+                    : 'bg-red-100 text-red-700'
+              }`}>
+                {r.status === 'pending' ? 'รออนุมัติ' : 
+                 r.status === 'approved' ? 'กำลังยืมอยู่' : 'ปฏิเสธ'}
+              </span>
+            </div>
+          ))}
+          {requests.length === 0 && <div className="text-sm text-gray-500">ยังไม่มีกิจกรรม</div>}
         </div>
       </div>
 
-      {/* Activity - notifications of actions (pending registrations) */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 animate-fade-in-up" style={{ animationDelay: '700ms' }}>
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">กิจกรรมล่าสุด (คำขอสมัครสมาชิก)</h3>
-        <div className="space-y-3 max-h-72 overflow-auto">
-          {pending.slice(0, 20).map((p) => (
-            <div key={p.id} className="text-sm text-gray-700 flex items-center justify-between">
-              <span className="truncate">{p.fullname} ส่งคำขอสมัครสมาชิก • {new Date(p.requested_at).toLocaleString()}</span>
-              <span className={`text-xs rounded-full px-2 py-0.5 ${p.status==='pending'?'bg-yellow-100 text-yellow-700': p.status==='approved'?'bg-emerald-100 text-emerald-700':'bg-red-100 text-red-700'}`}>{p.status}</span>
+      {/* Equipment Statistics */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Most Borrowed Equipment */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 animate-fade-in-up" style={{ animationDelay: '700ms' }}>
+          <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+            <TrendingUp className="h-5 w-5 text-green-500" />
+            อุปกรณ์ยืมเยอะที่สุด (Top 5)
+          </h3>
+          <div className="space-y-3">
+            {statsLoading ? (
+              <div className="text-center py-4">
+                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500 mx-auto"></div>
+                <p className="mt-2 text-sm text-gray-500">กำลังโหลด...</p>
+        </div>
+            ) : mostBorrowed.length > 0 ? (
+              <div className="space-y-2">
+                {mostBorrowed.map((item, index) => {
+                  const maxCount = Math.max(...mostBorrowed.map(i => i.borrow_count));
+                  const percentage = (item.borrow_count / maxCount) * 100;
+                  
+            return (
+                    <div key={item.id} className="space-y-1">
+                      <div className="flex items-center justify-between text-sm">
+                        <div className="flex items-center gap-2">
+                        <div className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold" style={{ backgroundColor: '#0EA5E9', color: 'white' }}>
+                          {index + 1}
+                        </div>
+                        <span className="font-medium text-gray-900 truncate">{item.name}</span>
+                      </div>
+                      <span className="font-semibold" style={{ color: '#0EA5E9' }}>{item.borrow_count} ครั้ง</span>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-2">
+                      <div 
+                        className="h-2 rounded-full transition-all duration-500"
+                        style={{ 
+                          width: `${percentage}%`,
+                          background: 'linear-gradient(to right, #0EA5E9, #0284C7)'
+                        }}
+                      ></div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="text-center py-4 text-gray-500">
+                <p className="text-sm">ยังไม่มีข้อมูลการยืม</p>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Most Damaged Equipment */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 animate-fade-in-up" style={{ animationDelay: '800ms' }}>
+          <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+            <Activity className="h-5 w-5 text-red-500" />
+            อุปกรณ์เสียหายเยอะที่สุด (Top 5)
+          </h3>
+          <div className="space-y-3">
+            {statsLoading ? (
+              <div className="text-center py-4">
+                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500 mx-auto"></div>
+                <p className="mt-2 text-sm text-gray-500">กำลังโหลด...</p>
+      </div>
+            ) : mostDamaged.length > 0 ? (
+              <div className="space-y-2">
+                {mostDamaged.map((item, index) => {
+                  const maxCount = Math.max(...mostDamaged.map(i => i.damage_count));
+                  const percentage = (item.damage_count / maxCount) * 100;
+                  
+                  return (
+                    <div key={item.id} className="space-y-1">
+                      <div className="flex items-center justify-between text-sm">
+                        <div className="flex items-center gap-2">
+                          <div className="w-6 h-6 bg-red-100 text-red-600 rounded-full flex items-center justify-center text-xs font-bold">
+                            {index + 1}
+                          </div>
+                          <span className="font-medium text-gray-900 truncate">{item.name}</span>
+                        </div>
+                        <span className="text-red-600 font-semibold">{item.damage_count} ครั้ง</span>
+                      </div>
+                      <div className="w-full bg-gray-200 rounded-full h-2">
+                        <div 
+                          className="bg-gradient-to-r from-red-400 to-red-600 h-2 rounded-full transition-all duration-500"
+                          style={{ width: `${percentage}%` }}
+                        ></div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="text-center py-4 text-gray-500">
+                <p className="text-sm">ยังไม่มีข้อมูลการเสียหาย</p>
+              </div>
+            )}
             </div>
-          ))}
-          {pending.length === 0 && <div className="text-sm text-gray-500">ยังไม่มีกิจกรรม</div>}
         </div>
       </div>
 

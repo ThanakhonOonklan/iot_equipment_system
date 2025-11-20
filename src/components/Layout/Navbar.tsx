@@ -87,7 +87,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onToggle }) => {
           </button>
           
           <div className="flex items-center gap-3">
-            <div className="w-1 h-6 bg-blue-500 rounded-full"></div>
+            <div className="w-1 h-6 rounded-full" style={{ backgroundColor: '#21a0dc' }}></div>
             <h1 className="text-xl font-semibold text-gray-900">
               {currentPageTitle}
             </h1>

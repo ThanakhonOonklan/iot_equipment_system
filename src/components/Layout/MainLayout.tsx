@@ -24,7 +24,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
   };
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
+    <div className="flex h-screen bg-gray-50">
       {/* Sidebar - Hidden on mobile */}
       <div className="hidden lg:block">
         <Sidebar 
@@ -44,7 +44,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
         </div>
         
         {/* Page content */}
-        <main className="flex-1 transition-all duration-300 pb-16 lg:pb-0">
+        <main className="flex-1 transition-all duration-300 pb-16 lg:pb-0 overflow-y-auto">
           {children}
         </main>
       </div>

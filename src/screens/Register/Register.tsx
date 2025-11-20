@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "../../components/ui/button";
-import { Card, CardContent } from "../../components/ui/card";
+import { Card } from "../../components/ui/card";
 import { Input } from "../../components/ui/input";
 import { Label } from "../../components/ui/label";
 import { Eye, EyeOff, User, Mail, IdCard, Lock, Loader2 } from "lucide-react";
@@ -170,6 +170,8 @@ export const SignUp = (): JSX.Element => {
         confirmButtonText: 'ไปหน้าเข้าสู่ระบบ',
         confirmButtonColor: '#0EA5E9'
       });
+      // ตั้งค่า flag เพื่อข้าม loading
+      sessionStorage.setItem('fromSignup', 'true');
       navigate('/login', { replace: true });
       
     } catch (error: any) {
@@ -185,41 +187,24 @@ export const SignUp = (): JSX.Element => {
 
   return (
     <div className="min-h-screen flex items-center justify-center p-3" style={{ backgroundColor: '#EDF7FD' }}>
-      <div className="w-full max-w-6xl">
+      <div className="w-full max-w-md">
         <Card className="bg-white shadow-2xl border-0 rounded-2xl overflow-hidden">
           <div className="flex min-h-[600px]">
-            {/* Left Section - Logo and System Info */}
-            <div className="hidden lg:flex flex-col items-center justify-center flex-1 bg-gradient-to-br from-[#0EA5E9] to-[#0284C7] p-8 relative">
-              <div className="absolute inset-0 bg-white/10"></div>
-              <div className="relative z-10 text-center space-y-6">
-                <div className="relative">
-                  <img
-                    src="/images/new_logo.jpg"
-                    alt="IoT System Logo"
-                    className="w-64 h-64 object-cover mx-auto rounded-full"
-                  />
-                </div>
-                <div className="space-y-4">
-                  <h1 className="text-3xl font-bold text-white">
-                    ระบบบริการยืม-คืนอุปกรณ์วิชา IoT
-                  </h1>
-                  <p className="text-white/90 text-lg max-w-md">
-                    เข้าสู่ระบบเพื่อจัดการยืม-คืนอุปกรณ์สำหรับวิชา IoT
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* Right Section - Signup Form */}
-            <div className="flex-1 flex flex-col justify-center p-6 lg:p-8">
+            {/* Signup Form */}
+            <div className="w-full flex flex-col justify-center p-6 lg:p-8">
               <div className="w-full max-w-sm mx-auto">
                 <div className="text-center mb-6">
+                  <div className="mb-4">
+                    <img
+                      src="/images/logo_bar.png"
+                      alt="SCI NEXT Logo"
+                      className="w-16 h-16 mx-auto"
+                    />
+                  </div>
                   <h2 className="text-2xl font-bold text-gray-800 mb-1">
                     สมัครสมาชิก
                   </h2>
-                  <p className="text-gray-600 text-sm">
-                    กรอกข้อมูลของคุณ
-                  </p>
+                 
                 </div>
 
                 <form 
@@ -304,6 +289,7 @@ export const SignUp = (): JSX.Element => {
                     <span>คุณมีบัญชีอยู่แล้วใช่มั้ย?</span>
                     <Link
                       to="/login"
+                      onClick={() => sessionStorage.setItem('fromSignup', 'true')}
                       className="text-[#0EA5E9] hover:text-[#0284C7] font-semibold hover:underline transition-all duration-300"
                     >
                       เข้าสู่ระบบ

@@ -29,17 +29,52 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   // ตรวจสอบสถานะการ login เมื่อ component mount
   useEffect(() => {
-    const checkAuthStatus = () => {
+    const checkAuthStatus = async () => {
       try {
         if (apiService.isLoggedIn()) {
           const currentUser = apiService.getCurrentUser();
           if (currentUser) {
-            setUser(currentUser);
+            // ตรวจสอบสถานะบัญชีจากเซิร์ฟเวอร์
+            try {
+              const response = await apiService.raw('/users.php', { method: 'GET' }) as any;
+              if (response.success && response.data?.users) {
+                const updatedUser = response.data.users.find((u: User) => u.id === currentUser.id);
+                if (updatedUser) {
+                  if (updatedUser.status === 'suspended') {
+                    // บัญชีถูกระงับ - ออกจากระบบทันที
+                    apiService.logout();
+                    setUser(null);
+                    await Swal.fire({
+                      title: 'บัญชีถูกระงับ',
+                      text: 'บัญชีของคุณถูกระงับ โปรดติดต่อเจ้าหน้าที่',
+                      icon: 'warning',
+                      confirmButtonColor: '#0EA5E9'
+                    });
+                    window.location.href = '/login';
+                    return;
+                  } else {
+                    // อัปเดตข้อมูลผู้ใช้
+                    setUser(updatedUser);
+                    apiService.setUserData(updatedUser, localStorage.getItem('token') || '', localStorage.getItem('login_time') || '');
+                  }
+                } else {
+                  // ไม่พบผู้ใช้ - ออกจากระบบ
+                  apiService.logout();
+                  setUser(null);
+                }
+              } else {
+                setUser(currentUser);
+              }
+            } catch (error) {
+              // ถ้าไม่สามารถตรวจสอบได้ ให้ใช้ข้อมูลเดิม
+              setUser(currentUser);
+            }
           }
         }
       } catch (error) {
         console.error('Error checking auth status:', error);
         apiService.logout();
+        setUser(null);
       } finally {
         setIsLoading(false);
       }
@@ -47,32 +82,37 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
     checkAuthStatus();
 
-    // cross-tab suspension listener
-    const onStorage = (e: StorageEvent) => {
-      try {
-        if (e.key !== 'user-suspended') return;
-        if (!e.newValue) return;
-        const payload = JSON.parse(e.newValue);
-        if (!payload || !payload.userId) return;
-        const current = apiService.getCurrentUser();
-        if (current && current.id === payload.userId) {
-          apiService.logout();
-          setUser(null);
-          Swal.fire({
-            title: 'บัญชีถูกระงับ',
-            text: 'บัญชีของคุณถูกระงับ โปรดติดต่อเจ้าหน้าที่',
-            icon: 'warning',
-            confirmButtonColor: '#0EA5E9'
-          }).finally(() => {
-            window.location.href = '/login';
-          });
+    // ตรวจสอบสถานะบัญชีทุก 30 วินาที
+    const interval = setInterval(async () => {
+      if (apiService.isLoggedIn()) {
+        try {
+          const currentUser = apiService.getCurrentUser();
+          if (currentUser) {
+            const response = await apiService.raw('/users.php', { method: 'GET' }) as any;
+            if (response.success && response.data?.users) {
+              const updatedUser = response.data.users.find((u: User) => u.id === currentUser.id);
+              if (updatedUser && updatedUser.status === 'suspended') {
+                // บัญชีถูกระงับ - ออกจากระบบทันที
+                apiService.logout();
+                setUser(null);
+                await Swal.fire({
+                  title: 'บัญชีถูกระงับ',
+                  text: 'บัญชีของคุณถูกระงับ โปรดติดต่อเจ้าหน้าที่',
+                  icon: 'warning',
+                  confirmButtonColor: '#0EA5E9'
+                });
+                window.location.href = '/login';
+              }
+            }
+          }
+        } catch (error) {
+          // ไม่ต้องทำอะไรถ้าเกิดข้อผิดพลาด
         }
-      } catch {}
-    };
+      }
+    }, 30000); // ตรวจสอบทุก 30 วินาที
 
-    window.addEventListener('storage', onStorage);
     return () => {
-      window.removeEventListener('storage', onStorage);
+      clearInterval(interval);
     };
   }, []);
 
@@ -86,10 +126,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         apiService.setUserData(user, token, login_time);
         setUser(user);
       } else {
-        throw new Error(response.message);
+        throw new Error(response.message || 'เกิดข้อผิดพลาดในการเข้าสู่ระบบ');
       }
     } catch (error) {
-      console.error('Login error:', error);
       throw error;
     } finally {
       setIsLoading(false);
