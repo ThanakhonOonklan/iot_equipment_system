@@ -1,3 +1,5 @@
+import Swal from 'sweetalert2';
+
 const API_BASE_URL = 'http://localhost/iot_equipment_system/api'; 
 
 export interface LoginRequest {
@@ -245,19 +247,54 @@ class ApiService {
       const data = await response.json();
 
       if (!response.ok) {
-        throw { status: response.status, message: data.message || `HTTP error! status: ${response.status}` };
+        // ไม่ throw error สำหรับ 401 เพื่อไม่ให้แสดงใน Network tab
+        if (response.status === 401) {
+          return { success: false, message: 'รอการพิจารณาคำขอ', data: null } as T;
+        }
+        throw { status: response.status, message: data.message || '' };
+      }
+
+      // ตรวจสอบสถานะบัญชีหลังจาก API call สำเร็จ
+      if (endpoint !== '/users.php' && data.success) {
+        this.checkUserStatus();
       }
 
       return data;
     } catch (error) {
-      console.error('API Request Error:', error);
-      
       // ถ้าเป็น network error หรือ fetch error
       if ((error as any) instanceof TypeError && (error as any).message.includes('fetch')) {
         throw { status: 0, message: 'ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้ กรุณาตรวจสอบการเชื่อมต่ออินเทอร์เน็ต' };
       }
       
       throw error as any;
+    }
+  }
+
+  /**
+   * ตรวจสอบสถานะบัญชีผู้ใช้
+   */
+  private async checkUserStatus(): Promise<void> {
+    try {
+      const currentUser = this.getCurrentUser();
+      if (!currentUser) return;
+
+      const response = await this.raw('/users.php', { method: 'GET' }) as any;
+      if (response.success && response.data?.users) {
+        const updatedUser = response.data.users.find((u: User) => u.id === currentUser.id);
+        if (updatedUser && updatedUser.status === 'suspended') {
+          // บัญชีถูกระงับ - ออกจากระบบทันที
+          this.logout();
+          await Swal.fire({
+            title: 'บัญชีถูกระงับ',
+            text: 'บัญชีของคุณถูกระงับ โปรดติดต่อเจ้าหน้าที่',
+            icon: 'warning',
+            confirmButtonColor: '#0EA5E9'
+          });
+          window.location.href = '/login';
+        }
+      }
+    } catch (error) {
+      // ไม่ต้องทำอะไรถ้าเกิดข้อผิดพลาด
     }
   }
 
@@ -466,6 +503,21 @@ class ApiService {
     return this.request<{ success: boolean; message: string; data: any }>('/return_equipment.php', {
       method: 'POST',
       body: JSON.stringify(data),
+    });
+  }
+
+  /**
+   * Equipment Statistics APIs
+   */
+  async getMostBorrowedEquipment(limit: number = 5): Promise<{ success: boolean; message: string; data: { equipment: any[] } }> {
+    return this.request<{ success: boolean; message: string; data: { equipment: any[] } }>(`/equipment_stats.php?type=most_borrowed&limit=${limit}`, {
+      method: 'GET',
+    });
+  }
+
+  async getMostDamagedEquipment(limit: number = 5): Promise<{ success: boolean; message: string; data: { equipment: any[] } }> {
+    return this.request<{ success: boolean; message: string; data: { equipment: any[] } }>(`/equipment_stats.php?type=most_damaged&limit=${limit}`, {
+      method: 'GET',
     });
   }
 }

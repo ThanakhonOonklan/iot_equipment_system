@@ -50,7 +50,7 @@ try {
     $user = $stmt->fetch(PDO::FETCH_ASSOC);
     
     if (!$user) {
-        Response::error('โปรดสร้างบัญชีของท่าน', 404);
+        Response::error('', 401);
     }
     
     // ตรวจสอบสถานะบัญชี

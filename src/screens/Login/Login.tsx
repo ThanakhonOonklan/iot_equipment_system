@@ -18,9 +18,27 @@ export const Login = (): JSX.Element => {
     general?: string;
   }>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   const { login } = useAuth();
   const navigate = useNavigate();
+
+  // Loading effect when component mounts
+  React.useEffect(() => {
+    // Check if coming from signup page
+    const fromSignup = sessionStorage.getItem('fromSignup');
+    if (fromSignup) {
+      // Skip loading if coming from signup
+      setIsLoading(false);
+      sessionStorage.removeItem('fromSignup');
+    } else {
+      // Show loading for 2 seconds
+      const timer = setTimeout(() => {
+        setIsLoading(false);
+      }, 2000);
+      return () => clearTimeout(timer);
+    }
+  }, []);
 
   const validateStudentId = (studentId: string): boolean => {
     const pattern = /^\d{12}$/;
@@ -48,7 +66,7 @@ export const Login = (): JSX.Element => {
     setErrors({});
 
     try {
-      // Validate before submit
+      
       if (!validateStudentId(formData.studentId)) {
         setErrors((prev) => ({
           ...prev,
@@ -62,7 +80,7 @@ export const Login = (): JSX.Element => {
         return;
       }
 
-      // Call login API
+    
       try {
         await login(formData.studentId, formData.password);
       } catch (err: any) {
@@ -90,8 +108,6 @@ export const Login = (): JSX.Element => {
         navigate('/dashboard');
       }
     } catch (error: any) {
-      console.error("Login error:", error);
-
       // จัดการข้อความ error ตามสถานการณ์
       let errorMessage = error.message || "เกิดข้อผิดพลาดในการเข้าสู่ระบบ";
 
@@ -101,46 +117,48 @@ export const Login = (): JSX.Element => {
           "ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้ กรุณาตรวจสอบการเชื่อมต่ออินเทอร์เน็ต";
       }
 
+      console.log("Setting error message:", errorMessage);
       setErrors((prev) => ({
         ...prev,
         general: errorMessage,
       }));
+      console.log("Errors after setting:", { ...errors, general: errorMessage });
     } finally {
       setIsSubmitting(false);
     }
   };
 
+  // Loading screen
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: '#EDF7FD' }}>
+        <div className="text-center">
+          <img
+            src="/images/logo_login.png"
+            alt="Loading Logo"
+            className="w-96 h-96 mx-auto animate-pulse"
+          />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen flex items-center justify-center p-3" style={{ backgroundColor: '#EDF7FD' }}>
-      <div className="w-full max-w-6xl">
+      <div className="w-full max-w-md">
         <Card className="bg-white shadow-2xl border-0 rounded-2xl overflow-hidden">
           <div className="flex min-h-[600px]">
-            {/* Left Section - Logo and System Info */}
-            <div className="hidden lg:flex flex-col items-center justify-center flex-1 bg-gradient-to-br from-[#0EA5E9] to-[#0284C7] p-8 relative">
-              <div className="absolute inset-0 bg-white/10"></div>
-              <div className="relative z-10 text-center space-y-6">
-                <div className="relative">
-                  <img
-                    src="/images/new_logo.jpg"
-                    alt="IoT System Logo"
-                    className="w-64 h-64 object-cover mx-auto rounded-full"
-                  />
-                </div>
-                <div className="space-y-4">
-                  <h1 className="text-3xl font-bold text-white">
-                    ระบบบริการยืม-คืนอุปกรณ์วิชา IoT
-                  </h1>
-                  <p className="text-white/90 text-lg max-w-md">
-                    เข้าสู่ระบบเพื่อจัดการยืม-คืนอุปกรณ์สำหรับวิชา IoT
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* Right Section - Login Form */}
-            <div className="flex-1 flex flex-col justify-center p-6 lg:p-8">
+            {/* Login Form */}
+            <div className="w-full flex flex-col justify-center p-6 lg:p-8">
               <div className="w-full max-w-sm mx-auto">
                 <div className="text-center mb-6">
+                  <div className="mb-4">
+                    <img
+                      src="/images/logo_bar.png"
+                      alt="SCI NEXT Logo"
+                      className="w-16 h-16 mx-auto"
+                    />
+                  </div>
                   <h2 className="text-2xl font-bold text-gray-800 mb-1">
                     เข้าสู่ระบบ
                   </h2>
@@ -196,14 +214,6 @@ export const Login = (): JSX.Element => {
                   {errors.general && (
                     <div className="bg-red-50 border border-red-200 text-red-700 px-3 py-2 rounded-lg">
                       <p className="text-xs">{errors.general}</p>
-                      {errors.general === "โปรดสร้างบัญชีของท่าน" && (
-                        <Link
-                          to="/signup"
-                          className="text-[#0EA5E9] hover:text-[#0284C7] font-semibold hover:underline transition-colors text-sm"
-                        >
-                          คลิกที่นี่เพื่อสมัครสมาชิก
-                        </Link>
-                      )}
                     </div>
                   )}
 

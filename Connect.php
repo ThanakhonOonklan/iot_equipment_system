@@ -1,20 +1,12 @@
 <?php
-/**
- * ไฟล์เชื่อมต่อฐานข้อมูลสำหรับระบบยืม-คืนอุปกรณ์วิชา IoT
- * Database Connection for IoT Equipment Borrowing System
- */
-
 class Database {
     private $host = 'localhost';
     private $db_name = 'iot_equipment_system';
-    private $username = 'root'; // เปลี่ยนตามการตั้งค่าของคุณ
-    private $password = ''; // เปลี่ยนตามการตั้งค่าของคุณ
+    private $username = 'root';
+    private $password = ''; 
     private $charset = 'utf8mb4';
     private $conn;
 
-    /**
-     * สร้างการเชื่อมต่อฐานข้อมูล
-     */
     public function getConnection() {
         $this->conn = null;
         
@@ -37,9 +29,7 @@ class Database {
         return $this->conn;
     }
 
-    /**
-     * ปิดการเชื่อมต่อฐานข้อมูล
-     */
+  
     public function closeConnection() {
         $this->conn = null;
     }

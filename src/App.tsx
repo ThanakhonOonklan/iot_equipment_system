@@ -13,12 +13,14 @@ import PendingRegistrations from './screens/PendingRegistrations';
 import BorrowRequests from './screens/BorrowRequests';
 import History from './screens/History';
 import { ReturnEquipment } from './screens/ReturnEquipment';
+import MyRequests from './screens/MyRequests/MyRequests';
 
 function App() {
   return (
-    <AuthProvider>
-      <LoadingProvider>
-        <Router>
+    <div style={{ backgroundColor: '#e8f7ff', minHeight: '100vh' }}>
+      <AuthProvider>
+        <LoadingProvider>
+          <Router>
           <Routes>
           <Route path="/" element={<Navigate to="/login" replace />} />
           <Route 
@@ -70,6 +72,14 @@ function App() {
             }
           />
           <Route
+            path="/my-requests"
+            element={
+              <ProtectedRoute>
+                <MyRequests />
+              </ProtectedRoute>
+            }
+          />
+          <Route
             path="/borrow-requests"
             element={
               <ProtectedRoute>
@@ -105,6 +115,7 @@ function App() {
         </Router>
       </LoadingProvider>
     </AuthProvider>
+    </div>
   );
 }
 
