@@ -1,17 +1,43 @@
 <?php
+// Load config if exists (for local development)
+if (file_exists(__DIR__ . '/config.php')) {
+    require_once __DIR__ . '/config.php';
+}
+
 class Database {
-    private $host = 'localhost';
-    private $db_name = 'iot_equipment_system';
-    private $username = 'root';
-    private $password = ''; 
+    // ใช้ environment variables (สำหรับ production/Vercel) หรือ config (สำหรับ local)
+    private $host;
+    private $db_name;
+    private $username;
+    private $password;
+    private $port;
     private $charset = 'utf8mb4';
     private $conn;
+
+    public function __construct() {
+        // ตรวจสอบว่ามี config constants หรือไม่ (local development)
+        if (defined('DB_HOST')) {
+            $this->host = DB_HOST;
+            $this->db_name = DB_NAME;
+            $this->username = DB_USER;
+            $this->password = DB_PASS;
+            $this->port = defined('DB_PORT') ? DB_PORT : '4000';
+        } else {
+            // ใช้ environment variables (production/Vercel)
+            $this->host = getenv('DB_HOST') ?: 'localhost';
+            $this->db_name = getenv('DB_NAME') ?: 'iot_equipment_system';
+            $this->username = getenv('DB_USER') ?: 'root';
+            $this->password = getenv('DB_PASS') ?: '';
+            $this->port = getenv('DB_PORT') ?: '4000';
+        }
+    }
 
     public function getConnection() {
         $this->conn = null;
         
         try {
-            $dsn = "mysql:host=" . $this->host . ";dbname=" . $this->db_name . ";charset=" . $this->charset;
+            // เพิ่ม port ใน DSN สำหรับ TiDB Cloud (port 4000)
+            $dsn = "mysql:host=" . $this->host . ";port=" . $this->port . ";dbname=" . $this->db_name . ";charset=" . $this->charset;
             $options = [
                 PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
                 PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
@@ -45,7 +71,8 @@ class Database {
                     'status' => 'success',
                     'message' => 'เชื่อมต่อฐานข้อมูลสำเร็จ',
                     'database' => $this->db_name,
-                    'host' => $this->host
+                    'host' => $this->host,
+                    'port' => $this->port
                 ];
             }
         } catch (Exception $e) {

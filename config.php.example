@@ -1,0 +1,35 @@
+<?php
+/**
+ * Database Configuration Example
+ * 
+ * Copy ไฟล์นี้เป็น config.php และแก้ไขค่าตาม TiDB Cloud ของคุณ
+ * 
+ * ⚠️ อย่า commit config.php ที่มี credentials จริงลง Git!
+ */
+
+// ตรวจสอบว่าอยู่ใน local หรือ production
+$isLocal = (
+    ($_SERVER['HTTP_HOST'] ?? '') === 'localhost' || 
+    strpos($_SERVER['HTTP_HOST'] ?? '', 'localhost') !== false ||
+    strpos($_SERVER['HTTP_HOST'] ?? '', '127.0.0.1') !== false ||
+    (isset($_SERVER['SERVER_NAME']) && $_SERVER['SERVER_NAME'] === 'localhost')
+);
+
+if ($isLocal) {
+    // Local development - ใช้ค่าจาก config
+    define('DB_HOST', 'gateway01.ap-southeast-1.prod.aws.tidbcloud.com');
+    define('DB_PORT', '4000');
+    define('DB_NAME', 'iot_equipment_system');
+    define('DB_USER', 'YOUR_TIDB_USERNAME'); // แทนที่ด้วย username จาก TiDB Cloud
+    define('DB_PASS', 'YOUR_TIDB_PASSWORD'); // แทนที่ด้วย password ที่ generate จาก TiDB Cloud
+    
+} else {
+    // Production - ใช้ environment variables จาก Vercel
+    define('DB_HOST', getenv('DB_HOST') ?: 'localhost');
+    define('DB_PORT', getenv('DB_PORT') ?: '4000');
+    define('DB_NAME', getenv('DB_NAME') ?: 'iot_equipment_system');
+    define('DB_USER', getenv('DB_USER') ?: 'root');
+    define('DB_PASS', getenv('DB_PASS') ?: '');
+}
+?>
+
