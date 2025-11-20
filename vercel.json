@@ -1,0 +1,36 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "package.json",
+      "use": "@vercel/static-build",
+      "config": {
+        "distDir": "dist"
+      }
+    }
+  ],
+  "functions": {
+    "api/**/*.php": {
+      "runtime": "@vercel/php@2.0.0"
+    }
+  },
+  "rewrites": [
+    {
+      "source": "/api/(.*)",
+      "destination": "/api/$1"
+    },
+    {
+      "source": "/assets/:path*",
+      "destination": "/dist/assets/:path*"
+    },
+    {
+      "source": "/images/:path*",
+      "destination": "/dist/images/:path*"
+    },
+    {
+      "source": "/:path*",
+      "destination": "/dist/index.html"
+    }
+  ]
+}
+

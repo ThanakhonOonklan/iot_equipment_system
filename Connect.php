@@ -45,11 +45,33 @@ class Database {
                 PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES utf8mb4 COLLATE utf8mb4_unicode_ci"
             ];
             
+            // ตรวจสอบว่าเป็น TiDB Cloud (ต้องการ SSL/TLS)
+            if (strpos($this->host, 'tidbcloud.com') !== false || strpos($this->host, 'tidbcloud') !== false) {
+                // เพิ่ม SSL options สำหรับ TiDB Cloud
+                $options[PDO::MYSQL_ATTR_SSL_CA] = null; // ใช้ system CA bundle
+                $options[PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT] = false; // สำหรับ TiDB Cloud สามารถปิดได้
+            }
+            
             $this->conn = new PDO($dsn, $this->username, $this->password, $options);
             
         } catch(PDOException $exception) {
             error_log("Connection error: " . $exception->getMessage());
-            throw new Exception("ไม่สามารถเชื่อมต่อฐานข้อมูลได้");
+            // แสดง error message ที่ละเอียดขึ้นเพื่อช่วยในการ debug
+            $errorMsg = "ไม่สามารถเชื่อมต่อฐานข้อมูลได้";
+            $errorDetails = $exception->getMessage();
+            
+            // เพิ่มรายละเอียด error สำหรับ debugging
+            if (strpos($errorDetails, 'Access denied') !== false) {
+                $errorMsg .= " - Username หรือ Password ไม่ถูกต้อง";
+            } elseif (strpos($errorDetails, 'Unknown database') !== false) {
+                $errorMsg .= " - Database '" . $this->db_name . "' ไม่พบ";
+            } elseif (strpos($errorDetails, 'Connection refused') !== false) {
+                $errorMsg .= " - ไม่สามารถเชื่อมต่อกับ host: " . $this->host;
+            } elseif (strpos($errorDetails, 'SSL') !== false || strpos($errorDetails, 'TLS') !== false) {
+                $errorMsg .= " - ปัญหา SSL/TLS connection";
+            }
+            
+            throw new Exception($errorMsg . " (Details: " . $errorDetails . ")");
         }
         
         return $this->conn;
