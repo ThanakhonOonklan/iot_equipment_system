@@ -1,4 +1,5 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { SpeedInsights } from "@vercel/speed-insights/react";
 import { AuthProvider } from './contexts/AuthContext';
 import { LoadingProvider } from './contexts/LoadingContext';
 import { ProtectedRoute } from './components/ProtectedRoute';
@@ -133,6 +134,7 @@ function App() {
         </Router>
       </LoadingProvider>
     </AuthProvider>
+    <SpeedInsights />
     </div>
   );
 }

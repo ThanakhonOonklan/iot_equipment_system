@@ -4,7 +4,7 @@
  * Register API for IoT Equipment Borrowing System
  */
 
-require_once '../Connect.php';
+require_once __DIR__ . '/../Connect.php';
 
 // ตั้งค่า CORS Headers
 header('Access-Control-Allow-Origin: *');
@@ -109,6 +109,7 @@ try {
     if ($check_stmt->fetch()) {
         Response::error('อีเมลนี้มีผู้ใช้งานแล้ว', 409);
     }
+}
     
     // Hash รหัสผ่าน
     $hashed_password = Security::hashPassword($password);
@@ -147,15 +148,14 @@ try {
             'fullname' => $new_user['fullname'],
             'role' => $new_user['role'],
             'status' => $new_user['status'],
-            'created_at' => $new_user['created_at']
-            'id' => $user_id,
-            'student_id' => $student_id,
-            'email' => $email
+            'created_at' => $new_user['created_at'], 
         ],
         'message' => 'สมัครสมาชิกสำเร็จ คุณสามารถเข้าสู่ระบบได้แล้ว'
     ];
     
+    
     Response::success('สมัครสมาชิกสำเร็จ', $response_data, 201);
+
     
 } catch (Exception $e) {
     error_log("Register error: " . $e->getMessage());
@@ -165,4 +165,6 @@ try {
         $database->closeConnection();
     }
 }
+
+
 ?>

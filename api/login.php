@@ -1,6 +1,6 @@
 <?php
 
-require_once '../Connect.php';
+require_once __DIR__ . '/../Connect.php';
 
 // ตั้งค่า CORS Headers
 header('Access-Control-Allow-Origin: *');

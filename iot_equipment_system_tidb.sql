@@ -25,23 +25,23 @@ CREATE TABLE IF NOT EXISTS `users` (
   KEY `idx_status` (`status`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='ตารางผู้ใช้';
 
--- สร้างตาราง equipment
-CREATE TABLE IF NOT EXISTS `equipment` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `name` varchar(100) NOT NULL COMMENT 'ชื่ออุปกรณ์',
-  `description` text DEFAULT NULL COMMENT 'รายละเอียดอุปกรณ์',
-  `category` varchar(50) DEFAULT NULL COMMENT 'หมวดหมู่อุปกรณ์',
-  `image_url` varchar(255) DEFAULT NULL COMMENT 'ลิงก์รูปภาพอุปกรณ์',
-  `quantity_total` int(11) NOT NULL DEFAULT 0 COMMENT 'จำนวนที่มีทั้งหมด',
-  `quantity_available` int(11) NOT NULL DEFAULT 0 COMMENT 'จำนวนที่คงเหลือ',
-  `status` enum('available','limited','unavailable','maintenance','borrowed','lost') DEFAULT 'available' COMMENT 'สถานะอุปกรณ์',
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
-  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
-  PRIMARY KEY (`id`),
-  KEY `idx_status` (`status`),
-  KEY `idx_category` (`category`),
-  KEY `idx_name` (`name`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='ตารางอุปกรณ์';
+  -- สร้างตาราง equipment
+  CREATE TABLE IF NOT EXISTS `equipment` (
+    `id` int(11) NOT NULL AUTO_INCREMENT,
+    `name` varchar(100) NOT NULL COMMENT 'ชื่ออุปกรณ์',
+    `description` text DEFAULT NULL COMMENT 'รายละเอียดอุปกรณ์',
+    `category` varchar(50) DEFAULT NULL COMMENT 'หมวดหมู่อุปกรณ์',
+    `image_url` varchar(255) DEFAULT NULL COMMENT 'ลิงก์รูปภาพอุปกรณ์',
+    `quantity_total` int(11) NOT NULL DEFAULT 0 COMMENT 'จำนวนที่มีทั้งหมด',
+    `quantity_available` int(11) NOT NULL DEFAULT 0 COMMENT 'จำนวนที่คงเหลือ',
+    `status` enum('available','limited','unavailable','maintenance','borrowed','lost') DEFAULT 'available' COMMENT 'สถานะอุปกรณ์',
+    `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+    `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+    PRIMARY KEY (`id`),
+    KEY `idx_status` (`status`),
+    KEY `idx_category` (`category`),
+    KEY `idx_name` (`name`)
+  ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='ตารางอุปกรณ์';
 
 -- สร้างตาราง borrow_requests
 CREATE TABLE IF NOT EXISTS `borrow_requests` (
