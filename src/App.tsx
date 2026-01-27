@@ -14,6 +14,8 @@ import BorrowRequests from './screens/BorrowRequests';
 import History from './screens/History';
 import { ReturnEquipment } from './screens/ReturnEquipment';
 import MyRequests from './screens/MyRequests/MyRequests';
+import { MostBorrowedEquipment } from './screens/MostBorrowedEquipment';
+import { MostDamagedEquipment } from './screens/MostDamagedEquipment';
 
 function App() {
   return (
@@ -108,6 +110,22 @@ function App() {
             element={
               <ProtectedRoute>
                 <ReturnEquipment />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/most-borrowed-equipment"
+            element={
+              <ProtectedRoute>
+                <MostBorrowedEquipment />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/most-damaged-equipment"
+            element={
+              <ProtectedRoute>
+                <MostDamagedEquipment />
               </ProtectedRoute>
             }
           />

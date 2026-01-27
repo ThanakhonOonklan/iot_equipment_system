@@ -8,6 +8,8 @@ import {
   UserPlus,
   FileText,
   PackageCheck,
+  TrendingUp,
+  AlertTriangle,
 } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 
@@ -22,6 +24,8 @@ const menuItems = {
       category: 'Dashboard',
       items: [
         { icon: LayoutDashboard, label: 'Dashboard', path: '/dashboard' },
+        { icon: TrendingUp, label: 'อุปกรณ์ยืมเยอะที่สุด', path: '/most-borrowed-equipment' },
+        { icon: AlertTriangle, label: 'อุปกรณ์เสียหายเยอะที่สุด', path: '/most-damaged-equipment' },
       ]
     },
     {
@@ -71,7 +75,6 @@ const menuItems = {
         { icon: ShoppingCart, label: 'ยืมอุปกรณ์', path: '/borrow' },
         { icon: History, label: 'ประวัติการยืม-คืน', path: '/history' },
         { icon: FileText, label: 'สถานะคำขอของฉัน', path: '/my-requests' }
-
       ]
     }
   ]
