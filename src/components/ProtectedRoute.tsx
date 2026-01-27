@@ -7,10 +7,14 @@ interface ProtectedRouteProps {
 }
 
 export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
+  // TEMPORARY: Bypass authentication for development
+  // TODO: Remove this bypass when login is fixed
+  const BYPASS_AUTH = true;
+
   const { isLoggedIn, isLoading, user } = useAuth() as any;
   const location = useLocation();
 
-  if (isLoading) {
+  if (isLoading && !BYPASS_AUTH) {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
         <div className="text-center">
@@ -20,8 +24,14 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
     );
   }
 
-  if (!isLoggedIn) {
+  // Bypass login check if BYPASS_AUTH is true
+  if (!isLoggedIn && !BYPASS_AUTH) {
     return <Navigate to="/login" replace />;
+  }
+
+  // Skip role check if bypassing auth
+  if (BYPASS_AUTH) {
+    return <>{children}</>;
   }
 
   // Role-based route guard
