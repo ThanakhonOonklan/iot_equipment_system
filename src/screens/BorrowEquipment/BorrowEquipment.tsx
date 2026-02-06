@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { MainLayout } from "../../components/Layout";
+import { MainLayout } from "../../components/layout";
 import { EquipmentCard, EquipmentStatus } from "../../components/ui/EquipmentCard";
-import { BorrowRequestModal } from "../../components/BorrowRequestModal";
+import { BorrowRequestModal } from "../../components/borrow-requests/BorrowRequestModal";
 import { apiService } from "../../services/api";
 import { ShoppingCart, Trash2 } from "lucide-react";
 import Swal from 'sweetalert2';

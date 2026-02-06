@@ -120,7 +120,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       setIsLoading(true);
       const response = await apiService.login({ student_id: studentId, password });
-      
+
       if (response.success) {
         const { user, token, login_time } = response.data;
         apiService.setUserData(user, token, login_time);
@@ -145,7 +145,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       setIsLoading(true);
       const response = await apiService.register(userData);
-      
+
       if (response.success) {
         // สมัครสำเร็จ - ไม่ทำการล็อกอินอัตโนมัติ
         // ปล่อยให้ผู้ใช้ไปล็อกอินด้วยตัวเองที่หน้า Login

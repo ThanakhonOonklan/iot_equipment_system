@@ -37,9 +37,7 @@ try {
   Response::error('Server error: ' . $e->getMessage(), 500);
 }
 
-/**
- * ดึงรายการผู้ยืมทั้งหมดที่ยังไม่ได้คืน
- */
+
 function listActiveBorrowers(PDO $conn) {
   $stmt = $conn->prepare("
     SELECT 
@@ -75,12 +73,7 @@ function listActiveBorrowers(PDO $conn) {
   
   Response::success('ดึงข้อมูลผู้ยืมสำเร็จ', ['borrowers' => $borrowers]);
 }
-
-/**
- * ดึงรายละเอียดการยืมของคำขอเดียวกัน
- */
 function getBorrowerDetails(PDO $conn, int $borrowingId) {
-  // ดึงข้อมูลการยืมหลักเพื่อหา user_id, borrow_date, due_date
   $mainBorrowingStmt = $conn->prepare("
     SELECT 
       b.user_id,
@@ -100,7 +93,6 @@ function getBorrowerDetails(PDO $conn, int $borrowingId) {
     Response::error('ไม่พบข้อมูลการยืม', 404);
   }
   
-  // ดึงรายการอุปกรณ์ทั้งหมดที่ยืมในคำขอเดียวกัน
   $itemsStmt = $conn->prepare("
     SELECT 
       e.id as equipment_id,
@@ -127,7 +119,6 @@ function getBorrowerDetails(PDO $conn, int $borrowingId) {
   ]);
   $items = $itemsStmt->fetchAll(PDO::FETCH_ASSOC);
   
-  // สร้างข้อมูลผู้ใช้
   $user = [
     'id' => $mainBorrowing['user_id'],
     'fullname' => $mainBorrowing['fullname'],
@@ -140,10 +131,6 @@ function getBorrowerDetails(PDO $conn, int $borrowingId) {
     'items' => $items
   ]);
 }
-
-/**
- * บันทึกการคืนอุปกรณ์
- */
 function returnEquipment(PDO $conn, array $input) {
   // ตรวจสอบข้อมูลที่จำเป็น
   if (!isset($input['borrowing_id']) || !isset($input['items']) || !is_array($input['items'])) {

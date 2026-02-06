@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { X, Calendar, Package, FileText } from 'lucide-react';
-import { apiService } from '../services/api';
+import { apiService } from '../../services/api';
 
 interface BorrowRequestModalProps {
   isOpen: boolean;

@@ -1,5 +1,5 @@
 import React from 'react';
-import { MainLayout } from '../../components/Layout';
+import { MainLayout } from '../../components/layout';
 
 export const MostDamagedEquipment: React.FC = () => {
   return (

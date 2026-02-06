@@ -94,7 +94,6 @@ function createUser($conn, $input) {
   $student_id = Security::sanitize($input['student_id']);
   $password = $input['password'];
   
-  // map legacy role values
   $roleInput = isset($input['role']) ? Security::sanitize($input['role']) : 'user';
   if ($roleInput === 'student') { $roleInput = 'user'; }
   if ($roleInput === 'teacher') { $roleInput = 'staff'; }
@@ -140,7 +139,7 @@ function updateUser($conn, $input) {
   $fullname = isset($input['fullname']) ? Security::sanitize($input['fullname']) : null;
   $email = isset($input['email']) ? Security::sanitize($input['email']) : null;
   $student_id = isset($input['student_id']) ? Security::sanitize($input['student_id']) : null;
-  // Normalize role if provided
+
   $role = isset($input['role']) ? Security::sanitize($input['role']) : null;
   if ($role === 'student') { $role = 'user'; }
   if ($role === 'teacher') { $role = 'staff'; }

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { X, CheckCircle, AlertTriangle, XCircle, Package } from 'lucide-react';
-import { apiService, type Borrower, type BorrowedItem, type ReturnItem } from '../services/api';
+import { apiService, type Borrower, type BorrowedItem, type ReturnItem } from '../../../services/api';
 import Swal from 'sweetalert2';
 
 interface ReturnEquipmentModalProps {
@@ -150,7 +150,7 @@ export const ReturnEquipmentModal: React.FC<ReturnEquipmentModalProps> = ({
     }
 
     // ตรวจสอบว่ามีอุปกรณ์เสียหายหรือหายหรือไม่ และต้องมีหมายเหตุ
-    const itemsWithIssues = items.filter(item => 
+    const itemsWithIssues = items.filter(item =>
       (item.quantity_damaged > 0 || item.quantity_lost > 0) && !item.notes.trim()
     );
 

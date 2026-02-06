@@ -2,8 +2,8 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { SpeedInsights } from "@vercel/speed-insights/react";
 import { AuthProvider } from './contexts/AuthContext';
 import { LoadingProvider } from './contexts/LoadingContext';
-import { ProtectedRoute } from './components/ProtectedRoute';
-import { AuthGuard } from './components/AuthGuard';
+import { ProtectedRoute } from './components/auth/ProtectedRoute';
+import { AuthGuard } from './components/auth/AuthGuard';
 import { Login } from './screens/Login';
 import { SignUp } from './screens/Register';
 import { Home } from './screens/Home';

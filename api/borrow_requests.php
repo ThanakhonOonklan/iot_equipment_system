@@ -60,7 +60,6 @@ function listBorrowRequests($conn) {
     $stmt->execute();
     $requests = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-    // Get items for each request
     foreach ($requests as &$request) {
         $itemsStmt = $conn->prepare('
             SELECT 

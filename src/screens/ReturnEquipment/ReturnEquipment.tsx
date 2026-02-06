@@ -1,10 +1,10 @@
 import React, { useEffect, useState, useMemo } from 'react';
-import { MainLayout } from '../../components/Layout';
+import { MainLayout } from '../../components/layout';
 import { apiService, type Borrower } from '../../services/api';
 import { Package, Calendar, AlertCircle, CheckCircle, Clock } from 'lucide-react';
 import SearchInput from '../../components/ui/SearchInput';
 import PageSizeSelect from '../../components/ui/PageSizeSelect';
-import { ReturnEquipmentModal } from '../../components/ReturnEquipmentModal';
+import { ReturnEquipmentModal } from '../../components/equipment/modals/ReturnEquipmentModal';
 import Swal from 'sweetalert2';
 
 const formatThaiDate = (value: string | number | Date) => {

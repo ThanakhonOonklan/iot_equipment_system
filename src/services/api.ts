@@ -1,10 +1,9 @@
 import Swal from 'sweetalert2';
 
-// ใช้ environment variable สำหรับ production หรือ localhost สำหรับ development
 const API_BASE_URL = import.meta.env.VITE_API_URL || 
   (import.meta.env.PROD 
-    ? window.location.origin + '/api'  // Production: ใช้ full URL จาก current origin
-    : 'http://localhost/iot_equipment_system/api'  // Development: ใช้ localhost
+    ? window.location.origin + '/api'  
+    : 'http://localhost/iot_equipment_system/api'  
   ); 
 
 export interface LoginRequest {

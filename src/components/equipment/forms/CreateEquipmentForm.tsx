@@ -131,7 +131,6 @@ export const CreateEquipmentForm: React.FC<CreateEquipmentFormProps> = ({
               value={createForm.image_url}
               onChange={(e) => setCreateForm({ ...createForm, image_url: e.target.value })}
               className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-sky-500"
-              placeholder="https://example.com/image.jpg"
             />
           </div>
         </div>

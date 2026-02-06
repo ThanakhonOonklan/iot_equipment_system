@@ -19,11 +19,9 @@ export const EditUserForm: React.FC<EditUserFormProps> = ({
   setEditForm,
   editError,
 }) => {
-  // Validation
   const editEmailValid = /^\d{12}-st@rmutsb\.ac\.th$/.test(editForm.email || "");
   const editStudentValid = /^\d{12}$/.test(editForm.student_id || "");
-  
-  // Name validation - only letters and spaces
+
   const nameValid = /^[ก-๙a-zA-Z\s]+$/.test(editForm.fullname.split(' ')[0] || '');
   const lastNameValid = /^[ก-๙a-zA-Z\s]+$/.test(editForm.fullname.split(' ').slice(1).join(' ') || '');
 
@@ -35,7 +33,6 @@ export const EditUserForm: React.FC<EditUserFormProps> = ({
         </div>
       )}
       <div className="space-y-6">
-        {/* ข้อมูลส่วนตัว Section */}
         <div className="bg-white rounded-xl shadow p-5">
           <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2"><User className="h-5 w-5 text-gray-500" /> ข้อมูลส่วนตัว</h3>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -47,11 +44,10 @@ export const EditUserForm: React.FC<EditUserFormProps> = ({
                   const lastName = editForm.fullname.split(' ').slice(1).join(' ');
                   setEditForm({ ...editForm, fullname: `${e.target.value} ${lastName}`.trim() });
                 }}
-                className={`h-11 ${
-                  editForm.fullname.split(' ')[0] && !nameValid
-                    ? "border-rose-300 focus:border-rose-500"
-                    : ""
-                }`}
+                className={`h-11 ${editForm.fullname.split(' ')[0] && !nameValid
+                  ? "border-rose-300 focus:border-rose-500"
+                  : ""
+                  }`}
                 placeholder="กรอกชื่อ"
               />
               {editForm.fullname.split(' ')[0] && !nameValid && (
@@ -68,11 +64,10 @@ export const EditUserForm: React.FC<EditUserFormProps> = ({
                   const firstName = editForm.fullname.split(' ')[0] || '';
                   setEditForm({ ...editForm, fullname: `${firstName} ${e.target.value}`.trim() });
                 }}
-                className={`h-11 ${
-                  editForm.fullname.split(' ').slice(1).join(' ') && !lastNameValid
-                    ? "border-rose-300 focus:border-rose-500"
-                    : ""
-                }`}
+                className={`h-11 ${editForm.fullname.split(' ').slice(1).join(' ') && !lastNameValid
+                  ? "border-rose-300 focus:border-rose-500"
+                  : ""
+                  }`}
                 placeholder="กรอกนามสกุล"
               />
               {editForm.fullname.split(' ').slice(1).join(' ') && !lastNameValid && (
@@ -105,13 +100,12 @@ export const EditUserForm: React.FC<EditUserFormProps> = ({
                 onChange={(e) =>
                   setEditForm({ ...editForm, email: e.target.value })
                 }
-                className={`h-11 ${
-                  editForm.email
-                    ? editEmailValid
-                      ? "border-emerald-300 focus:border-emerald-500"
-                      : "border-rose-300 focus:border-rose-500"
-                    : ""
-                }`}
+                className={`h-11 ${editForm.email
+                  ? editEmailValid
+                    ? "border-emerald-300 focus:border-emerald-500"
+                    : "border-rose-300 focus:border-rose-500"
+                  : ""
+                  }`}
                 placeholder="กรอกอีเมล"
               />
               {editForm.email && !editEmailValid && (
@@ -144,13 +138,12 @@ export const EditUserForm: React.FC<EditUserFormProps> = ({
                 onChange={(e) =>
                   setEditForm({ ...editForm, student_id: e.target.value })
                 }
-                className={`h-11 ${
-                  editForm.student_id
-                    ? editStudentValid
-                      ? "border-emerald-300 focus:border-emerald-500"
-                      : "border-rose-300 focus:border-rose-500"
-                    : ""
-                }`}
+                className={`h-11 ${editForm.student_id
+                  ? editStudentValid
+                    ? "border-emerald-300 focus:border-emerald-500"
+                    : "border-rose-300 focus:border-rose-500"
+                  : ""
+                  }`}
                 placeholder="กรอกรหัสนักศึกษา"
               />
               {editForm.student_id && !editStudentValid && (

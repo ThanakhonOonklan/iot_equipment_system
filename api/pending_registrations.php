@@ -15,7 +15,6 @@ try {
   $db = new Database();
   $conn = $db->getConnection();
 
-  // Ensure table exists (idempotent)
   $conn->exec("CREATE TABLE IF NOT EXISTS pending_registrations (
     id INT(11) NOT NULL AUTO_INCREMENT,
     fullname VARCHAR(100) NOT NULL,
