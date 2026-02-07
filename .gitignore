@@ -29,3 +29,12 @@ config.php
 .env.local
 .env.production
 .vercel
+
+# Backend files (if not deploying via GitHub)
+# WARNING: Uncommenting these will prevent Render deployment from GitHub
+# api/
+# Connect.php
+# *.sql
+# composer.json
+# .render-buildpack.txt
+

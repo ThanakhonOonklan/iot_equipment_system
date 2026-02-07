@@ -188,7 +188,7 @@ CREATE TABLE `users` (
   `email` varchar(50) NOT NULL COMMENT 'อีเมล (รหัส 12 หลัก + st@rmutsb.ac.th)',
   `fullname` varchar(100) NOT NULL COMMENT 'ชื่อ-นามสกุล',
   `password` varchar(255) NOT NULL COMMENT 'รหัสผ่าน (hashed)',
-  `role` enum('admin','staff','user','guest') DEFAULT 'user' COMMENT 'บทบาทผู้ใช้',
+  `role` enum('admin','staff','user') DEFAULT 'user' COMMENT 'บทบาทผู้ใช้',
   `status` enum('active','inactive','suspended') DEFAULT 'active' COMMENT 'สถานะบัญชี',
   `created_at` timestamp NOT NULL DEFAULT current_timestamp() COMMENT 'วันที่สร้าง',
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp() COMMENT 'วันที่อัปเดต'
