@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useMemo } from 'react';
-import { MainLayout } from '../../components/layout';
+import { MainLayout } from '../../components/layout/index';
 import { apiService, type Borrower } from '../../services/api';
 import { Package, Calendar, AlertCircle, CheckCircle, Clock } from 'lucide-react';
 import SearchInput from '../../components/ui/SearchInput';
@@ -74,7 +74,7 @@ export const ReturnEquipment: React.FC = () => {
     const overdue = borrowers.filter(b => b.status === 'overdue').length;
     const warning = borrowers.filter(b => b.status === 'warning').length;
     const normal = borrowers.filter(b => b.status === 'normal').length;
-    
+
     return { total, overdue, warning, normal };
   }, [borrowers]);
 
@@ -175,203 +175,203 @@ export const ReturnEquipment: React.FC = () => {
         `}
       </style>
       <div className="min-h-screen p-6">
-          <div className="mx-auto max-w-7xl space-y-6">
-            {/* Header (removed refresh button) */}
-            <div className="flex items-center justify-between">
-              <div></div>
+        <div className="mx-auto max-w-7xl space-y-6">
+          {/* Header (removed refresh button) */}
+          <div className="flex items-center justify-between">
+            <div></div>
+          </div>
+
+          {/* Stats Cards (click to filter) */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <button
+              type="button"
+              onClick={() => setStatusFilter(prev => prev === 'all' ? 'all' : 'all')}
+              className={`text-left bg-white rounded-xl shadow-sm p-6 border transition ${statusFilter === 'all' ? 'border-sky-400 ring-2 ring-sky-100' : 'border-gray-200 hover:border-gray-300'}`}
+            >
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600">ผู้ยืมทั้งหมด</p>
+                  <p className="text-3xl font-bold text-gray-900 mt-2">{stats.total}</p>
+                </div>
+                <div className="p-3 bg-blue-100 rounded-lg">
+                  <Package className="w-6 h-6 text-blue-600" />
+                </div>
+              </div>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setStatusFilter(prev => prev === 'overdue' ? 'all' : 'overdue')}
+              className={`text-left bg-white rounded-xl shadow-sm p-6 border transition ${statusFilter === 'overdue' ? 'border-red-400 ring-2 ring-red-100' : 'border-gray-200 hover:border-gray-300'}`}
+            >
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600">คืนล่าช้า</p>
+                  <p className="text-3xl font-bold text-red-600 mt-2">{stats.overdue}</p>
+                </div>
+                <div className="p-3 bg-red-100 rounded-lg">
+                  <AlertCircle className="w-6 h-6 text-red-600" />
+                </div>
+              </div>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setStatusFilter(prev => prev === 'warning' ? 'all' : 'warning')}
+              className={`text-left bg-white rounded-xl shadow-sm p-6 border transition ${statusFilter === 'warning' ? 'border-yellow-400 ring-2 ring-yellow-100' : 'border-gray-200 hover:border-gray-300'}`}
+            >
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600">ใกล้ครบกำหนด</p>
+                  <p className="text-3xl font-bold text-yellow-600 mt-2">{stats.warning}</p>
+                </div>
+                <div className="p-3 bg-yellow-100 rounded-lg">
+                  <Clock className="w-6 h-6 text-yellow-600" />
+                </div>
+              </div>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setStatusFilter(prev => prev === 'normal' ? 'all' : 'normal')}
+              className={`text-left bg-white rounded-xl shadow-sm p-6 border transition ${statusFilter === 'normal' ? 'border-emerald-400 ring-2 ring-emerald-100' : 'border-gray-200 hover:border-gray-300'}`}
+            >
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600">ปกติ</p>
+                  <p className="text-3xl font-bold text-green-600 mt-2">{stats.normal}</p>
+                </div>
+                <div className="p-3 bg-green-100 rounded-lg">
+                  <CheckCircle className="w-6 h-6 text-green-600" />
+                </div>
+              </div>
+            </button>
+          </div>
+
+          {/* Search */}
+          <div className="bg-white rounded-xl shadow-sm p-4 border border-gray-200">
+            <SearchInput value={query} onChange={setQuery} placeholder="ค้นหา ชื่อ | รหัสนักศึกษา..." />
+          </div>
+
+          {/* Pagination Controls */}
+          <div className="flex items-center justify-between">
+            <div className="text-sm text-gray-600">{totalItems} รายการ</div>
+            <div className="flex items-center gap-2">
+              <PageSizeSelect value={itemsPerPage} onChange={(v) => { setItemsPerPage(v); setCurrentPage(1); }} totalItems={totalItems} options={[5, 10, 20, 50]} />
+              <button
+                onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                disabled={currentPage === 1}
+                className="px-2 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                ก่อนหน้า
+              </button>
+              <span className="px-2 text-sm text-gray-600">หน้า {currentPage} จาก {totalPages}</span>
+              <button
+                onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                disabled={currentPage === totalPages}
+                className="px-2 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                ถัดไป
+              </button>
             </div>
+          </div>
 
-            {/* Stats Cards (click to filter) */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <button
-                type="button"
-                onClick={() => setStatusFilter(prev => prev === 'all' ? 'all' : 'all')}
-                className={`text-left bg-white rounded-xl shadow-sm p-6 border transition ${statusFilter==='all' ? 'border-sky-400 ring-2 ring-sky-100' : 'border-gray-200 hover:border-gray-300'}`}
-              >
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-600">ผู้ยืมทั้งหมด</p>
-                    <p className="text-3xl font-bold text-gray-900 mt-2">{stats.total}</p>
-                  </div>
-                  <div className="p-3 bg-blue-100 rounded-lg">
-                    <Package className="w-6 h-6 text-blue-600" />
-                  </div>
-                </div>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setStatusFilter(prev => prev === 'overdue' ? 'all' : 'overdue')}
-                className={`text-left bg-white rounded-xl shadow-sm p-6 border transition ${statusFilter==='overdue' ? 'border-red-400 ring-2 ring-red-100' : 'border-gray-200 hover:border-gray-300'}`}
-              >
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-600">คืนล่าช้า</p>
-                    <p className="text-3xl font-bold text-red-600 mt-2">{stats.overdue}</p>
-                  </div>
-                  <div className="p-3 bg-red-100 rounded-lg">
-                    <AlertCircle className="w-6 h-6 text-red-600" />
-                  </div>
-                </div>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setStatusFilter(prev => prev === 'warning' ? 'all' : 'warning')}
-                className={`text-left bg-white rounded-xl shadow-sm p-6 border transition ${statusFilter==='warning' ? 'border-yellow-400 ring-2 ring-yellow-100' : 'border-gray-200 hover:border-gray-300'}`}
-              >
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-600">ใกล้ครบกำหนด</p>
-                    <p className="text-3xl font-bold text-yellow-600 mt-2">{stats.warning}</p>
-                  </div>
-                  <div className="p-3 bg-yellow-100 rounded-lg">
-                    <Clock className="w-6 h-6 text-yellow-600" />
-                  </div>
-                </div>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setStatusFilter(prev => prev === 'normal' ? 'all' : 'normal')}
-                className={`text-left bg-white rounded-xl shadow-sm p-6 border transition ${statusFilter==='normal' ? 'border-emerald-400 ring-2 ring-emerald-100' : 'border-gray-200 hover:border-gray-300'}`}
-              >
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-600">ปกติ</p>
-                    <p className="text-3xl font-bold text-green-600 mt-2">{stats.normal}</p>
-                  </div>
-                  <div className="p-3 bg-green-100 rounded-lg">
-                    <CheckCircle className="w-6 h-6 text-green-600" />
-                  </div>
-                </div>
-              </button>
+          {/* Borrowers List */}
+          {loading ? (
+            <div className="bg-white rounded-xl shadow-sm p-8 text-center border border-gray-200">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
+              <p className="mt-4 text-gray-600">กำลังโหลดข้อมูล...</p>
             </div>
-
-            {/* Search */}
-            <div className="bg-white rounded-xl shadow-sm p-4 border border-gray-200">
-              <SearchInput value={query} onChange={setQuery} placeholder="ค้นหา ชื่อ | รหัสนักศึกษา..." />
+          ) : error ? (
+            <div className="bg-white rounded-xl shadow-sm p-8 text-center border border-red-200">
+              <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
+              <p className="text-red-600">{error}</p>
             </div>
-
-            {/* Pagination Controls */}
-            <div className="flex items-center justify-between">
-              <div className="text-sm text-gray-600">{totalItems} รายการ</div>
-              <div className="flex items-center gap-2">
-                <PageSizeSelect value={itemsPerPage} onChange={(v)=>{setItemsPerPage(v); setCurrentPage(1);}} totalItems={totalItems} options={[5,10,20,50]} />
-                <button
-                  onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-                  disabled={currentPage === 1}
-                  className="px-2 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+          ) : filtered.length === 0 ? (
+            <div className="bg-white rounded-xl shadow-sm p-8 text-center border border-gray-200">
+              <Package className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+              <p className="text-gray-600">ไม่พบรายการผู้ยืม</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {paginated.map((borrower, index) => (
+                <div
+                  key={borrower.borrowing_id}
+                  className={`bg-white rounded-xl shadow-sm overflow-hidden transition-all hover:shadow-md cursor-pointer ${getStatusColor(borrower.status)} animate-fade-in-up`}
+                  style={{ animationDelay: `${index * 100}ms` }}
+                  onClick={() => handleCardClick(borrower)}
                 >
-                  ก่อนหน้า
-                </button>
-                <span className="px-2 text-sm text-gray-600">หน้า {currentPage} จาก {totalPages}</span>
-                <button
-                  onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
-                  disabled={currentPage === totalPages}
-                  className="px-2 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  ถัดไป
-                </button>
-              </div>
-            </div>
-
-            {/* Borrowers List */}
-            {loading ? (
-              <div className="bg-white rounded-xl shadow-sm p-8 text-center border border-gray-200">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
-                <p className="mt-4 text-gray-600">กำลังโหลดข้อมูล...</p>
-              </div>
-            ) : error ? (
-              <div className="bg-white rounded-xl shadow-sm p-8 text-center border border-red-200">
-                <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
-                <p className="text-red-600">{error}</p>
-              </div>
-            ) : filtered.length === 0 ? (
-              <div className="bg-white rounded-xl shadow-sm p-8 text-center border border-gray-200">
-                <Package className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-600">ไม่พบรายการผู้ยืม</p>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {paginated.map((borrower, index) => (
-                  <div
-                      key={borrower.borrowing_id}
-                    className={`bg-white rounded-xl shadow-sm overflow-hidden transition-all hover:shadow-md cursor-pointer ${getStatusColor(borrower.status)} animate-fade-in-up`}
-                    style={{ animationDelay: `${index * 100}ms` }}
-                    onClick={() => handleCardClick(borrower)}
-                  >
-                    <div className="p-6">
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          {/* User Info */}
-                          <div className="mb-4">
-                            <div className="flex items-center gap-3 mb-2">
-                              <h3 className="text-xl font-semibold text-gray-900">
-                                {borrower.fullname}
-                              </h3>
-                              <span className="text-sm text-gray-600">
-                                รหัส: {borrower.student_id}
-                              </span>
-                              {getStatusBadge(borrower.status, borrower.days_remaining)}
-                            </div>
-                          </div>
-
-                          {/* Equipment Info */}
-                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            <div className="flex items-center gap-2">
-                              <Package className="w-5 h-5 text-gray-400" />
-                              <div>
-                                <p className="text-xs text-gray-500">จำนวนอุปกรณ์</p>
-                                <p className="text-sm font-semibold text-gray-900">
-                                  {borrower.total_items} ชิ้น ({borrower.unique_equipment} รายการ)
-                                </p>
-                              </div>
-                            </div>
-
-                            <div className="flex items-center gap-2">
-                              <Calendar className="w-5 h-5 text-gray-400" />
-                              <div>
-                                <p className="text-xs text-gray-500">วันที่ยืม</p>
-                                <p className="text-sm font-semibold text-gray-900">
-                                  {formatThaiDate(borrower.borrow_date)}
-                                </p>
-                              </div>
-                            </div>
-
-                            <div className="flex items-center gap-2">
-                              <Calendar className="w-5 h-5 text-gray-400" />
-                              <div>
-                                <p className="text-xs text-gray-500">วันที่ครบกำหนด</p>
-                                <p className="text-sm font-semibold text-gray-900">
-                                  {formatThaiDate(borrower.due_date)}
-                                </p>
-                              </div>
-                            </div>
+                  <div className="p-6">
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        {/* User Info */}
+                        <div className="mb-4">
+                          <div className="flex items-center gap-3 mb-2">
+                            <h3 className="text-xl font-semibold text-gray-900">
+                              {borrower.fullname}
+                            </h3>
+                            <span className="text-sm text-gray-600">
+                              รหัส: {borrower.student_id}
+                            </span>
+                            {getStatusBadge(borrower.status, borrower.days_remaining)}
                           </div>
                         </div>
 
-                        {/* Action Button */}
-                        <div className="ml-4">
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleReturnClick(borrower);
-                            }}
-                            className="px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors font-medium flex items-center gap-2 shadow-sm"
-                          >
-                            <CheckCircle className="w-5 h-5" />
-                            คืนอุปกรณ์
-                          </button>
+                        {/* Equipment Info */}
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                          <div className="flex items-center gap-2">
+                            <Package className="w-5 h-5 text-gray-400" />
+                            <div>
+                              <p className="text-xs text-gray-500">จำนวนอุปกรณ์</p>
+                              <p className="text-sm font-semibold text-gray-900">
+                                {borrower.total_items} ชิ้น ({borrower.unique_equipment} รายการ)
+                              </p>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-2">
+                            <Calendar className="w-5 h-5 text-gray-400" />
+                            <div>
+                              <p className="text-xs text-gray-500">วันที่ยืม</p>
+                              <p className="text-sm font-semibold text-gray-900">
+                                {formatThaiDate(borrower.borrow_date)}
+                              </p>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-2">
+                            <Calendar className="w-5 h-5 text-gray-400" />
+                            <div>
+                              <p className="text-xs text-gray-500">วันที่ครบกำหนด</p>
+                              <p className="text-sm font-semibold text-gray-900">
+                                {formatThaiDate(borrower.due_date)}
+                              </p>
+                            </div>
+                          </div>
                         </div>
+                      </div>
+
+                      {/* Action Button */}
+                      <div className="ml-4">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleReturnClick(borrower);
+                          }}
+                          className="px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors font-medium flex items-center gap-2 shadow-sm"
+                        >
+                          <CheckCircle className="w-5 h-5" />
+                          คืนอุปกรณ์
+                        </button>
                       </div>
                     </div>
                   </div>
-                ))}
-              </div>
-            )}
-          </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
+      </div>
 
       {/* Return Modal */}
       {showReturnModal && selectedBorrower && (
@@ -387,14 +387,14 @@ export const ReturnEquipment: React.FC = () => {
 
       {/* Details Slide Panel */}
       {showDetailsModal && borrowerDetails && (
-        <div 
+        <div
           className="fixed inset-0 bg-black bg-opacity-50 z-50 animate-in fade-in duration-300"
           onClick={() => {
             setShowDetailsModal(false);
             setBorrowerDetails(null);
           }}
         >
-          <div 
+          <div
             className="absolute right-0 top-0 h-full w-96 bg-white shadow-2xl transform transition-transform duration-300 ease-in-out slide-in-right"
             onClick={(e) => e.stopPropagation()}
           >

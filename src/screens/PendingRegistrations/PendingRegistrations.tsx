@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { MainLayout } from '../../components/layout';
+import { MainLayout } from '../../components/layout/index';
 import { apiService, type PendingRegistration } from '../../services/api';
 import { Check, X, CheckSquare, Square, Inbox } from 'lucide-react';
 import SearchInput from '../../components/ui/SearchInput';
@@ -86,7 +86,7 @@ export const PendingRegistrations: React.FC = () => {
     }
   };
 
-  
+
 
   const formatRequestedAt = (value: string | number | Date) => {
     const d = new Date(value);
@@ -103,91 +103,91 @@ export const PendingRegistrations: React.FC = () => {
   return (
     <MainLayout>
       <div className="min-h-screen p-4">
-          <div className="mx-auto max-w-6xl space-y-4">
-            {/* Header with search and actions */}
-            <div className="flex items-center justify-between gap-3">
-              <div className="flex-1 flex items-center gap-2">
-                <SearchInput value={query} onChange={setQuery} placeholder="ค้นหา รหัส | ชื่อ-นามสกุล | อีเมล" />
-              </div>
-              <div className="flex items-center gap-2">
-                <button className="px-3 py-2 text-sm rounded-md bg-[#0EA5E9] text-white hover:bg-emerald-700 flex items-center gap-2" onClick={() => handleApprove(selectedIds)}>
-                  <Check className="w-4 h-4" /> อนุมัติที่เลือก
-                </button>
-                <button className="px-3 py-2 text-sm rounded-md bg-red-600 text-white hover:bg-red-700 flex items-center gap-2" onClick={() => handleReject(selectedIds)}>
-                  <X className="w-4 h-4" /> ปฏิเสธที่เลือก
-                </button>
-                <button className="px-3 py-2 text-sm rounded-md bg-gray-700 text-white hover:bg-gray-800 flex items-center gap-2" onClick={() => handleApprove(filtered.map(r => r.id))}>
-                  <CheckSquare className="w-4 h-4" /> อนุมัติทั้งหมดที่แสดง
-                </button>
-              </div>
+        <div className="mx-auto max-w-6xl space-y-4">
+          {/* Header with search and actions */}
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex-1 flex items-center gap-2">
+              <SearchInput value={query} onChange={setQuery} placeholder="ค้นหา รหัส | ชื่อ-นามสกุล | อีเมล" />
             </div>
-
-            {/* Pagination Controls */}
-            <div className="flex items-center justify-between">
-              <div className="text-sm text-gray-600">{totalItems} รายการ</div>
-              <div className="flex items-center gap-2">
-                <PageSizeSelect value={itemsPerPage} onChange={(v)=>{setItemsPerPage(v); setCurrentPage(1);}} totalItems={totalItems} options={[5,10,15,20,50]} />
-                <button
-                  onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-                  disabled={currentPage === 1}
-                  className="px-2 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  ก่อนหน้า
-                </button>
-                <span className="px-2 text-sm text-gray-600">หน้า {currentPage} จาก {totalPages}</span>
-                <button
-                  onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
-                  disabled={currentPage === totalPages}
-                  className="px-2 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  ถัดไป
-                </button>
-              </div>
+            <div className="flex items-center gap-2">
+              <button className="px-3 py-2 text-sm rounded-md bg-[#0EA5E9] text-white hover:bg-emerald-700 flex items-center gap-2" onClick={() => handleApprove(selectedIds)}>
+                <Check className="w-4 h-4" /> อนุมัติที่เลือก
+              </button>
+              <button className="px-3 py-2 text-sm rounded-md bg-red-600 text-white hover:bg-red-700 flex items-center gap-2" onClick={() => handleReject(selectedIds)}>
+                <X className="w-4 h-4" /> ปฏิเสธที่เลือก
+              </button>
+              <button className="px-3 py-2 text-sm rounded-md bg-gray-700 text-white hover:bg-gray-800 flex items-center gap-2" onClick={() => handleApprove(filtered.map(r => r.id))}>
+                <CheckSquare className="w-4 h-4" /> อนุมัติทั้งหมดที่แสดง
+              </button>
             </div>
-
-            {/* Cards */}
-            {loading ? (
-              <div className="p-6 text-sm text-gray-500 bg-white rounded-xl border">กำลังโหลดคำขอ...</div>
-            ) : error ? (
-              <div className="p-6 text-sm text-red-600 bg-white rounded-xl border">{error}</div>
-            ) : filtered.length === 0 ? (
-              <div className="p-12 bg-white rounded-xl border text-center text-gray-600">
-                <Inbox className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-                <div className="text-sm">ไม่พบคำขอที่ตรงกับคำค้นหา</div>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {paginated.map(req => {
-                  const selected = selectedIds.includes(req.id);
-                  return (
-                    <div key={req.id} className={`border rounded-xl p-4 bg-white ${selected ? 'ring-2 ring-blue-500' : ''}`}>
-                      <div className="flex items-start justify-between">
-                        <div>
-                          <div className="font-semibold text-gray-900">{req.fullname}</div>
-                          <div className="text-sm text-gray-600">{req.student_id}</div>
-                          <div className="text-sm text-gray-600">{req.email}</div>
-                          <div className="text-xs text-gray-500 mt-1">{formatRequestedAt(req.requested_at)}</div>
-                        </div>
-                        <button onClick={() => toggleSelect(req.id)} className="text-gray-600 hover:text-blue-600">
-                          {selected ? <CheckSquare className="w-5 h-5" /> : <Square className="w-5 h-5" />}
-                        </button>
-                      </div>
-                      <div className="flex items-center gap-2 mt-4">
-                        <button className="px-3 py-1 rounded-md text-white bg-emerald-600 hover:bg-emerald-700 flex items-center gap-1" onClick={() => handleApprove([req.id])}>
-                          <Check className="w-4 h-4" /> อนุมัติ
-                        </button>
-                        <button className="px-3 py-1 rounded-md text-white bg-red-600 hover:bg-red-700 flex items-center gap-1" onClick={() => handleReject([req.id])}>
-                          <X className="w-4 h-4" /> ปฏิเสธ
-                        </button>
-                        
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
           </div>
+
+          {/* Pagination Controls */}
+          <div className="flex items-center justify-between">
+            <div className="text-sm text-gray-600">{totalItems} รายการ</div>
+            <div className="flex items-center gap-2">
+              <PageSizeSelect value={itemsPerPage} onChange={(v) => { setItemsPerPage(v); setCurrentPage(1); }} totalItems={totalItems} options={[5, 10, 15, 20, 50]} />
+              <button
+                onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                disabled={currentPage === 1}
+                className="px-2 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                ก่อนหน้า
+              </button>
+              <span className="px-2 text-sm text-gray-600">หน้า {currentPage} จาก {totalPages}</span>
+              <button
+                onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                disabled={currentPage === totalPages}
+                className="px-2 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                ถัดไป
+              </button>
+            </div>
+          </div>
+
+          {/* Cards */}
+          {loading ? (
+            <div className="p-6 text-sm text-gray-500 bg-white rounded-xl border">กำลังโหลดคำขอ...</div>
+          ) : error ? (
+            <div className="p-6 text-sm text-red-600 bg-white rounded-xl border">{error}</div>
+          ) : filtered.length === 0 ? (
+            <div className="p-12 bg-white rounded-xl border text-center text-gray-600">
+              <Inbox className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+              <div className="text-sm">ไม่พบคำขอที่ตรงกับคำค้นหา</div>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {paginated.map(req => {
+                const selected = selectedIds.includes(req.id);
+                return (
+                  <div key={req.id} className={`border rounded-xl p-4 bg-white ${selected ? 'ring-2 ring-blue-500' : ''}`}>
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <div className="font-semibold text-gray-900">{req.fullname}</div>
+                        <div className="text-sm text-gray-600">{req.student_id}</div>
+                        <div className="text-sm text-gray-600">{req.email}</div>
+                        <div className="text-xs text-gray-500 mt-1">{formatRequestedAt(req.requested_at)}</div>
+                      </div>
+                      <button onClick={() => toggleSelect(req.id)} className="text-gray-600 hover:text-blue-600">
+                        {selected ? <CheckSquare className="w-5 h-5" /> : <Square className="w-5 h-5" />}
+                      </button>
+                    </div>
+                    <div className="flex items-center gap-2 mt-4">
+                      <button className="px-3 py-1 rounded-md text-white bg-emerald-600 hover:bg-emerald-700 flex items-center gap-1" onClick={() => handleApprove([req.id])}>
+                        <Check className="w-4 h-4" /> อนุมัติ
+                      </button>
+                      <button className="px-3 py-1 rounded-md text-white bg-red-600 hover:bg-red-700 flex items-center gap-1" onClick={() => handleReject([req.id])}>
+                        <X className="w-4 h-4" /> ปฏิเสธ
+                      </button>
+
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </div>
+      </div>
     </MainLayout>
   );
 };
