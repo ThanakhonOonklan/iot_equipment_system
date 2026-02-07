@@ -4,18 +4,14 @@ import { useAuth } from '../../contexts/AuthContext';
 
 interface AuthGuardProps {
   children: React.ReactNode;
-  redirectTo?: string;
 }
 
 /**
  * AuthGuard component สำหรับป้องกันการเข้าถึงหน้า login/signup 
  * เมื่อผู้ใช้ล็อกอินแล้ว
  */
-export const AuthGuard: React.FC<AuthGuardProps> = ({ 
-  children, 
-  redirectTo = '/dashboard' 
-}) => {
-  const { isLoggedIn, isLoading } = useAuth();
+export const AuthGuard: React.FC<AuthGuardProps> = ({ children }) => {
+  const { isLoggedIn, isLoading, user } = useAuth();
 
   // แสดง loading ระหว่างตรวจสอบสถานะ
   if (isLoading) {
@@ -28,8 +24,9 @@ export const AuthGuard: React.FC<AuthGuardProps> = ({
     );
   }
 
-
+  // ถ้าล็อกอินแล้ว ให้ redirect ไปหน้าหลักตาม role
   if (isLoggedIn) {
+    const redirectTo = user?.role === 'user' ? '/borrow' : '/dashboard';
     return <Navigate to={redirectTo} replace />;
   }
 

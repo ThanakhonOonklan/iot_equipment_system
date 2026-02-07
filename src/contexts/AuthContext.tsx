@@ -118,7 +118,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const login = async (studentId: string, password: string): Promise<void> => {
     try {
-      setIsLoading(true);
       const response = await apiService.login({ student_id: studentId, password });
 
       if (response.success) {
@@ -130,8 +129,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       }
     } catch (error) {
       throw error;
-    } finally {
-      setIsLoading(false);
     }
   };
 

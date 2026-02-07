@@ -24,12 +24,12 @@ const daysBetween = (a?: string, b?: string) => {
 
 const statusBadge = (status: BorrowRequest['status']) => {
   if (status === 'approved' || status === 'completed') {
-    return <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700"><CheckCircle2 className="w-3 h-3"/> อนุมัติ</span>;
+    return <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700"><CheckCircle2 className="w-3 h-3" /> อนุมัติ</span>;
   }
   if (status === 'rejected') {
-    return <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-700"><XCircle className="w-3 h-3"/> ปฏิเสธ</span>;
+    return <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-700"><XCircle className="w-3 h-3" /> ปฏิเสธ</span>;
   }
-  return <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-700"><Clock4 className="w-3 h-3"/> รอดำเนินการ</span>;
+  return <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-700"><Clock4 className="w-3 h-3" /> รอดำเนินการ</span>;
 };
 
 const MyRequests: React.FC = () => {
@@ -76,16 +76,12 @@ const MyRequests: React.FC = () => {
     load();
   }, [user?.id]);
 
-  // Keep possibility to extend later; currently not used in UI
-  // const activeApproved = useMemo(() => requests.find(r => r.status === 'approved' || r.status === 'completed'), [requests]);
 
-  // summary values were removed as per new design
 
   return (
     <MainLayout>
       <div className="p-4">
         <div className="mx-auto max-w-5xl space-y-4">
-          <h1 className="text-xl font-semibold text-gray-800">สถานะคำขอของฉัน</h1>
 
           {/* Requests list */}
           <div className="bg-white border rounded-xl">

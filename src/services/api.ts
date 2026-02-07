@@ -250,11 +250,12 @@ class ApiService {
 
       const data = await response.json();
 
+      // ตรวจสอบ status 202 (pending registration) ก่อน - ถึงแม้จะเป็น successful status แต่ต้องแสดง alert
+      if (response.status === 202) {
+        throw { status: response.status, message: data.message || '' };
+      }
+
       if (!response.ok) {
-        // ไม่ throw error สำหรับ 401 เพื่อไม่ให้แสดงใน Network tab
-        if (response.status === 401) {
-          return { success: false, message: 'รอการพิจารณาคำขอ', data: null } as T;
-        }
         throw { status: response.status, message: data.message || '' };
       }
 

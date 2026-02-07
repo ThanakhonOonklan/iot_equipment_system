@@ -49,7 +49,25 @@ try {
     $user = $stmt->fetch(PDO::FETCH_ASSOC);
     
     if (!$user) {
-        Response::error('', 401);
+        // ตรวจสอบว่ามีข้อมูลใน pending_registrations หรือไม่
+        $pending_query = "SELECT id, status FROM pending_registrations 
+                         WHERE student_id = :student_id";
+        $pending_stmt = $conn->prepare($pending_query);
+        $pending_stmt->bindParam(':student_id', $student_id, PDO::PARAM_STR);
+        $pending_stmt->execute();
+        $pending = $pending_stmt->fetch(PDO::FETCH_ASSOC);
+        
+        if ($pending) {
+            // มีข้อมูลใน pending_registrations
+            if ($pending['status'] === 'pending') {
+                Response::error('คำขอสมัครสมาชิกของคุณอยู่ระหว่างรอการพิจารณาจากเจ้าหน้าที่', 202);
+            } else if ($pending['status'] === 'rejected') {
+                Response::error('คำขอสมัครสมาชิกของคุณถูกปฏิเสธ กรุณาติดต่อเจ้าหน้าที่', 403);
+            }
+        }
+        
+        // ไม่มีข้อมูลทั้งใน users และ pending_registrations
+        Response::error('รหัสนักศึกษาหรือรหัสผ่านไม่ถูกต้อง', 401);
     }
     
     // ตรวจสอบสถานะบัญชี
@@ -59,7 +77,7 @@ try {
     
     // ตรวจสอบรหัสผ่าน
     if (!Security::verifyPassword($password, $user['password'])) {
-        Response::error('รหัสนักศึกษาผิดพลาดหรือรหัสผ่านผิดพลาดโปรดกรอกใหม่', 401);
+        Response::error('รหัสนักศึกษาหรือรหัสผ่านไม่ถูกต้อง', 401);
     }
     
     // สร้าง Session

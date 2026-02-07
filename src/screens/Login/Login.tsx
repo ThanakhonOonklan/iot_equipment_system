@@ -7,6 +7,7 @@ import { Label } from "../../components/ui/label";
 import { User, Lock, Loader2 } from "lucide-react";
 import Swal from 'sweetalert2';
 import { useAuth } from "../../contexts/AuthContext";
+import { apiService } from "../../services/api";
 
 export const Login = (): JSX.Element => {
   const [formData, setFormData] = useState<{
@@ -18,27 +19,9 @@ export const Login = (): JSX.Element => {
     general?: string;
   }>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
 
   const { login } = useAuth();
   const navigate = useNavigate();
-
-  // Loading effect when component mounts
-  React.useEffect(() => {
-    // Check if coming from signup page
-    const fromSignup = sessionStorage.getItem('fromSignup');
-    if (fromSignup) {
-      // Skip loading if coming from signup
-      setIsLoading(false);
-      sessionStorage.removeItem('fromSignup');
-    } else {
-      // Show loading for 2 seconds
-      const timer = setTimeout(() => {
-        setIsLoading(false);
-      }, 2000);
-      return () => clearTimeout(timer);
-    }
-  }, []);
 
   const validateStudentId = (studentId: string): boolean => {
     const pattern = /^\d{12}$/;
@@ -52,7 +35,7 @@ export const Login = (): JSX.Element => {
       if (value && !validateStudentId(value)) {
         setErrors((prev) => ({
           ...prev,
-          studentId: "รูปแบบรหัสนักศึกษาไม่ถูกต้อง (รหัส 12 หลัก)",
+          studentId: "รูปแบบรหัสนักศึกษาไม่ถูกต้อง ",
         }));
       } else {
         setErrors((prev) => ({ ...prev, studentId: undefined }));
@@ -66,25 +49,36 @@ export const Login = (): JSX.Element => {
     setErrors({});
 
     try {
-      
       if (!validateStudentId(formData.studentId)) {
         setErrors((prev) => ({
           ...prev,
-          studentId: "รูปแบบรหัสนักศึกษาไม่ถูกต้อง (รหัส 12 หลัก)",
+          studentId: "รูปแบบรหัสนักศึกษาไม่ถูกต้อง ",
         }));
+        setIsSubmitting(false);
         return;
       }
 
       if (!formData.password) {
         setErrors((prev) => ({ ...prev, general: "กรุณากรอกรหัสผ่าน" }));
+        setIsSubmitting(false);
         return;
       }
 
-    
       try {
         await login(formData.studentId, formData.password);
       } catch (err: any) {
+        if (err && typeof err.status === 'number' && err.status === 202) {
+          setIsSubmitting(false);
+          await Swal.fire({
+            title: 'รอการพิจารณา',
+            text: 'คำขอสมัครของคุณอยู่ระหว่างรอการพิจารณาจากเจ้าหน้าที่ ',
+            icon: 'info',
+            confirmButtonColor: '#0EA5E9'
+          });
+          return;
+        }
         if (err && typeof err.status === 'number' && err.status === 403) {
+          setIsSubmitting(false);
           await Swal.fire({
             title: 'บัญชีถูกระงับ',
             text: 'บัญชีของคุณถูกระงับ โปรดติดต่อเจ้าหน้าที่',
@@ -97,51 +91,33 @@ export const Login = (): JSX.Element => {
       }
 
       // Redirect based on role: users -> borrow, staff/admin -> dashboard
-      try {
-        const current = (await import("../../services/api")).apiService.getCurrentUser();
-        if (current && current.role === 'user') {
-          navigate('/borrow');
-        } else {
-          navigate('/dashboard');
-        }
-      } catch {
+      const currentUser = apiService.getCurrentUser();
+      if (currentUser && currentUser.role === 'user') {
+        navigate('/borrow');
+      } else {
         navigate('/dashboard');
       }
     } catch (error: any) {
       // จัดการข้อความ error ตามสถานการณ์
-      let errorMessage = error.message || "เกิดข้อผิดพลาดในการเข้าสู่ระบบ";
+      let errorMessage = "เกิดข้อผิดพลาดในการเข้าสู่ระบบ";
 
+      // ถ้ามี error message จาก backend ให้แสดงตามนั้น
+      if (error.message && error.message.trim() !== '') {
+        errorMessage = error.message;
+      }
       // ถ้าเป็น network error
-      if (error.message === "Failed to fetch") {
-        errorMessage =
-          "ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้ กรุณาตรวจสอบการเชื่อมต่ออินเทอร์เน็ต";
+      else if (error.status === 0 || (error instanceof TypeError && error.message.includes('fetch'))) {
+        errorMessage = "ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้ กรุณาตรวจสอบการเชื่อมต่ออินเทอร์เน็ต";
       }
 
-      console.log("Setting error message:", errorMessage);
+      console.error("Login error:", error);
       setErrors((prev) => ({
         ...prev,
         general: errorMessage,
       }));
-      console.log("Errors after setting:", { ...errors, general: errorMessage });
-    } finally {
       setIsSubmitting(false);
     }
   };
-
-  // Loading screen
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: '#EDF7FD' }}>
-        <div className="text-center">
-          <img
-            src="/images/logo_login.png"
-            alt="Loading Logo"
-            className="w-96 h-96 mx-auto animate-pulse"
-          />
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen flex items-center justify-center p-3" style={{ backgroundColor: '#EDF7FD' }}>
@@ -181,11 +157,10 @@ export const Login = (): JSX.Element => {
                       placeholder="รหัสนักศึกษา 12 หลัก"
                       value={formData.studentId}
                       onChange={(e) => handleChange("studentId", e.target.value)}
-                      className={`w-full h-10 pl-3 pr-3 bg-white border rounded-lg focus:ring-0 transition-all duration-300 placeholder:text-gray-400 text-sm ${
-                        errors.studentId
-                          ? "border-red-500 focus:border-red-500"
-                          : "border-gray-300 focus:border-[#0EA5E9]"
-                      }`}
+                      className={`w-full h-10 pl-3 pr-3 bg-white border rounded-lg focus:ring-0 transition-all duration-300 placeholder:text-gray-400 text-sm ${errors.studentId
+                        ? "border-red-500 focus:border-red-500"
+                        : "border-gray-300 focus:border-[#0EA5E9]"
+                        }`}
                     />
                     {errors.studentId && (
                       <p className="text-red-500 text-xs mt-1">
