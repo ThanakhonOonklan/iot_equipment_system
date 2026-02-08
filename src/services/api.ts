@@ -6,6 +6,17 @@ const API_BASE_URL = import.meta.env.VITE_API_URL ||
     : 'http://localhost/iot_equipment_system/api'  
   ); 
 
+/**
+ * Check if backend is configured and available
+ */
+export const isBackendConfigured = (): boolean => {
+  // Check if API URL is set and not the default fallback
+  const isConfigured = !!API_BASE_URL && 
+    API_BASE_URL !== window.location.origin + '/api' &&
+    !API_BASE_URL.includes('vercel.app/api');
+  return isConfigured;
+};
+
 export interface LoginRequest {
   student_id: string;
   password: string;
@@ -266,9 +277,25 @@ class ApiService {
 
       return data;
     } catch (error) {
+      // Check if backend is not configured
+      if (!isBackendConfigured()) {
+        throw { 
+          status: 0, 
+          message: 'Backend ยังไม่ได้ถูกตั้งค่า - กรุณาติดต่อผู้ดูแลระบบ',
+          isBackendError: true 
+        };
+      }
+
       // ถ้าเป็น network error หรือ fetch error
-      if ((error as any) instanceof TypeError && (error as any).message.includes('fetch')) {
-        throw { status: 0, message: 'ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้ กรุณาตรวจสอบการเชื่อมต่ออินเทอร์เน็ต' };
+      if ((error as any) instanceof TypeError) {
+        const errorMessage = (error as any).message || '';
+        if (errorMessage.includes('fetch') || errorMessage.includes('Failed to fetch')) {
+          throw { 
+            status: 0, 
+            message: 'ไม่สามารถ เชื่อมต่อกับ Backend ได้ กรุณาตรวจสอบว่า Backend กำลังทำงานอยู่',
+            isBackendError: true
+          };
+        }
       }
       
       throw error as any;
