@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { MainLayout } from '../../components/layout/index';
+import { MainLayout } from '../../components/layout';
 import { apiService } from '../../services/api';
 import { User, Package, CheckCircle, ChevronDown, ChevronRight } from 'lucide-react';
 import SearchInput from '../../components/ui/SearchInput';
@@ -110,8 +110,8 @@ export const History: React.FC = () => {
             <button
               onClick={() => setActiveTab('all')}
               className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${activeTab === 'all'
-                  ? 'bg-white text-blue-600 shadow-sm'
-                  : 'text-gray-600 hover:text-gray-900'
+                ? 'bg-white text-blue-600 shadow-sm'
+                : 'text-gray-600 hover:text-gray-900'
                 }`}
             >
               ทั้งหมด
@@ -119,8 +119,8 @@ export const History: React.FC = () => {
             <button
               onClick={() => setActiveTab('borrow')}
               className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${activeTab === 'borrow'
-                  ? 'bg-white text-blue-600 shadow-sm'
-                  : 'text-gray-600 hover:text-gray-900'
+                ? 'bg-white text-blue-600 shadow-sm'
+                : 'text-gray-600 hover:text-gray-900'
                 }`}
             >
               การยืม
@@ -128,8 +128,8 @@ export const History: React.FC = () => {
             <button
               onClick={() => setActiveTab('return')}
               className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${activeTab === 'return'
-                  ? 'bg-white text-blue-600 shadow-sm'
-                  : 'text-gray-600 hover:text-gray-900'
+                ? 'bg-white text-blue-600 shadow-sm'
+                : 'text-gray-600 hover:text-gray-900'
                 }`}
             >
               การคืน
@@ -191,10 +191,10 @@ export const History: React.FC = () => {
                             <span className="mx-2">•</span>
                             <span className="inline-flex items-center gap-1">
                               <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${h.status === 'returned'
-                                  ? 'bg-green-100 text-green-700'
-                                  : h.status === 'overdue'
-                                    ? 'bg-red-100 text-red-700'
-                                    : 'bg-yellow-100 text-yellow-700'
+                                ? 'bg-green-100 text-green-700'
+                                : h.status === 'overdue'
+                                  ? 'bg-red-100 text-red-700'
+                                  : 'bg-yellow-100 text-yellow-700'
                                 }`}>
                                 <CheckCircle className="w-3 h-3 mr-1" />
                                 {h.status === 'returned' ? 'คืนแล้ว' : h.status === 'overdue' ? 'เกินกำหนด' : 'กำลังยืมอยู่'}
@@ -264,10 +264,10 @@ export const History: React.FC = () => {
                               <dt className="text-sm font-medium text-gray-500">สถานะ</dt>
                               <dd className="mt-1">
                                 <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${h.status === 'returned'
-                                    ? 'bg-green-100 text-green-700'
-                                    : h.status === 'overdue'
-                                      ? 'bg-red-100 text-red-700'
-                                      : 'bg-yellow-100 text-yellow-700'
+                                  ? 'bg-green-100 text-green-700'
+                                  : h.status === 'overdue'
+                                    ? 'bg-red-100 text-red-700'
+                                    : 'bg-yellow-100 text-yellow-700'
                                   }`}>
                                   {h.status === 'returned' ? 'คืนแล้ว' : h.status === 'overdue' ? 'เกินกำหนด' : 'กำลังยืมอยู่'}
                                 </span>

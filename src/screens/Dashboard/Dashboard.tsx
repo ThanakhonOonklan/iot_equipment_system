@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Users, Package, Activity, UserPlus, Calendar as CalendarIcon, TrendingUp, X } from 'lucide-react';
 import { StatsCard } from '../../components/ui/StatsCard';
-import { MainLayout } from '../../components/layout/index';
+import { MainLayout } from '../../components/layout';
 import { apiService } from '../../services/api';
 import { useNavigate } from 'react-router-dom';
 
@@ -363,8 +363,8 @@ export const Dashboard: React.FC = () => {
                   <div
                     key={idx}
                     className={`h-12 rounded-lg border flex flex-col items-center justify-center transition-all duration-200 cursor-pointer ${cell.day
-                        ? `border-gray-200 ${isToday ? 'bg-[#0EA5E9] text-white' : 'bg-gray-50 hover:bg-blue-50 hover:border-blue-300'}`
-                        : 'border-transparent'
+                      ? `border-gray-200 ${isToday ? 'bg-[#0EA5E9] text-white' : 'bg-gray-50 hover:bg-blue-50 hover:border-blue-300'}`
+                      : 'border-transparent'
                       }`}
                     onClick={() => {
                       if (cell.day && hasRequests) {
@@ -380,10 +380,10 @@ export const Dashboard: React.FC = () => {
                           {cell.day}
                         </div>
                         <div className={`text-[10px] ${isToday
-                            ? 'text-white font-semibold'
-                            : hasRequests
-                              ? 'text-[#0EA5E9] font-semibold'
-                              : 'text-gray-400'
+                          ? 'text-white font-semibold'
+                          : hasRequests
+                            ? 'text-[#0EA5E9] font-semibold'
+                            : 'text-gray-400'
                           }`}>
                           {cell.count || 0} คำขอ
                         </div>
@@ -405,10 +405,10 @@ export const Dashboard: React.FC = () => {
               <div key={r.id} className="text-sm text-gray-700 flex items-center justify-between">
                 <span className="truncate">
                   {r.fullname} <span className={`font-medium ${r.status === 'pending'
-                      ? 'text-yellow-600'
-                      : r.status === 'approved'
-                        ? 'text-green-600'
-                        : 'text-red-600'
+                    ? 'text-yellow-600'
+                    : r.status === 'approved'
+                      ? 'text-green-600'
+                      : 'text-red-600'
                     }`}>
                     {r.status === 'pending' ? 'รออนุมัติ' :
                       r.status === 'approved' ? 'กำลังยืมอยู่' : 'ปฏิเสธ'}
@@ -427,10 +427,10 @@ export const Dashboard: React.FC = () => {
                   })()}
                 </span>
                 <span className={`text-xs rounded-full px-2 py-0.5 ${r.status === 'pending'
-                    ? 'bg-yellow-100 text-yellow-700'
-                    : r.status === 'approved'
-                      ? 'bg-green-100 text-green-700'
-                      : 'bg-red-100 text-red-700'
+                  ? 'bg-yellow-100 text-yellow-700'
+                  : r.status === 'approved'
+                    ? 'bg-green-100 text-green-700'
+                    : 'bg-red-100 text-red-700'
                   }`}>
                   {r.status === 'pending' ? 'รออนุมัติ' :
                     r.status === 'approved' ? 'กำลังยืมอยู่' : 'ปฏิเสธ'}
@@ -555,8 +555,8 @@ export const Dashboard: React.FC = () => {
         >
           <div
             className={`bg-white rounded-xl p-6 max-w-md w-full mx-4 transform transition-all duration-300 ease-out ${modalVisible
-                ? 'scale-100 opacity-100 translate-y-0'
-                : 'scale-95 opacity-0 translate-y-4'
+              ? 'scale-100 opacity-100 translate-y-0'
+              : 'scale-95 opacity-0 translate-y-4'
               }`}
             onClick={(e) => e.stopPropagation()}
           >
@@ -596,10 +596,10 @@ export const Dashboard: React.FC = () => {
                         </p>
                       </div>
                       <span className={`text-xs rounded-full px-2 py-1 ${request.status === 'pending'
-                          ? 'bg-yellow-100 text-yellow-700'
-                          : request.status === 'approved'
-                            ? 'bg-emerald-100 text-emerald-700'
-                            : 'bg-red-100 text-red-700'
+                        ? 'bg-yellow-100 text-yellow-700'
+                        : request.status === 'approved'
+                          ? 'bg-emerald-100 text-emerald-700'
+                          : 'bg-red-100 text-red-700'
                         }`}>
                         {request.status === 'pending' ? 'รออนุมัติ' :
                           request.status === 'approved' ? 'อนุมัติแล้ว' : 'ปฏิเสธ'}
