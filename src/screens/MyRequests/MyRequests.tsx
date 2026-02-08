@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { MainLayout } from '../../components/layout/MainLayout';
+import { MainLayout } from '../../components/layout';
 import { apiService, BorrowRequest, User } from '../../services/api';
 import { useAuth } from '../../contexts/AuthContext';
 import { CheckCircle2, Clock4, XCircle } from 'lucide-react';
