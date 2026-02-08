@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Users, Package, Activity, UserPlus, Calendar as CalendarIcon, TrendingUp, X } from 'lucide-react';
 import { StatsCard } from '../../components/ui/StatsCard';
-import { MainLayout } from '@/components/layout';
+import { MainLayout } from '@/components/layout/index';
 import { apiService } from '../../services/api';
 import { useNavigate } from 'react-router-dom';
 

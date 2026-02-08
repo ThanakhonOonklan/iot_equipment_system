@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { MainLayout } from '@/components/layout';
+import { MainLayout } from '@/components/layout/index';
 import { apiService, type BorrowRequest } from '../../services/api';
 import { ChevronDown, ChevronRight, Check, X, User, Inbox } from 'lucide-react';
 import SearchInput from '../../components/ui/SearchInput';
