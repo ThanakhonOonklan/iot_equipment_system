@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useMemo } from 'react';
-import { MainLayout } from '@/components/layout/MainLayout';
+import { MainLayout } from '../../components/layout/MainLayout';
 import { apiService, type Borrower } from '../../services/api';
 import { Package, Calendar, AlertCircle, CheckCircle, Clock } from 'lucide-react';
 import SearchInput from '../../components/ui/SearchInput';

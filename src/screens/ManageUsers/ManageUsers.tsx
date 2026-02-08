@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { MainLayout } from '@/components/layout/MainLayout';
-import { SlideInPanel } from '@/components/layout/SlideInPanel';
+import { MainLayout } from '../../components/layout/MainLayout';
+import { SlideInPanel } from '../../components/layout/SlideInPanel';
 import { EditUserForm } from "../../components/users";
 import apiService, { User } from "../../services/api";
 import { Card } from "../../components/ui/card";
@@ -163,18 +163,18 @@ export const Users: React.FC = () => {
                       <td className="px-4 py-3 text-gray-700">{u.email}</td>
                       <td className="px-4 py-3">
                         <span className={`rounded-full px-2 py-1 text-xs font-medium ${u.role === 'admin'
-                            ? 'bg-purple-100 text-purple-700'
-                            : u.role === 'staff'
-                              ? 'bg-blue-100 text-blue-700'
-                              : 'bg-gray-100 text-gray-700'
+                          ? 'bg-purple-100 text-purple-700'
+                          : u.role === 'staff'
+                            ? 'bg-blue-100 text-blue-700'
+                            : 'bg-gray-100 text-gray-700'
                           }`}>
                           {u.role === 'admin' ? 'ผู้ดูแลระบบ' : u.role === 'staff' ? 'อาจารย์' : 'นักศึกษา'}
                         </span>
                       </td>
                       <td className="px-4 py-3">
                         <span className={`rounded-full px-2 py-1 text-xs font-medium ${u.status === 'active'
-                            ? 'bg-emerald-100 text-emerald-700'
-                            : 'bg-red-100 text-red-700'
+                          ? 'bg-emerald-100 text-emerald-700'
+                          : 'bg-red-100 text-red-700'
                           }`}>
                           {u.status === 'active' ? 'กำลังใช้งาน' : 'ระงับบัญชี'}
                         </span>
