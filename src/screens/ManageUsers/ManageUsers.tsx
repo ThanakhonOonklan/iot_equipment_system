@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { MainLayout } from '../../components/layout/MainLayout.tsx';
-import { SlideInPanel } from '../../components/layout/SlideInPanel.tsx';
+import { MainLayout } from '../../components/layout/MainLayout';
+import { SlideInPanel } from '../../components/layout/SlideInPanel';
 import { EditUserForm } from "../../components/users";
 import apiService, { User } from "../../services/api";
 import { Card } from "../../components/ui/card";
