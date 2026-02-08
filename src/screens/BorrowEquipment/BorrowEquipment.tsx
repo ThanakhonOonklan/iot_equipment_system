@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { MainLayout } from "../../components/layout";
+import { MainLayout } from '@/components/layout/MainLayout';
 import { EquipmentCard, EquipmentStatus } from "../../components/ui/EquipmentCard";
 import { BorrowRequestModal } from "../../components/borrow-requests/BorrowRequestModal";
 import { apiService } from "../../services/api";
@@ -27,7 +27,7 @@ interface SelectedEquipment {
   quantity_available: number;
   image_url?: string;
   description?: string;
-  selected_quantity: number; // จำนวนชิ้นที่เลือกยืม
+  selected_quantity: number;
 }
 
 export const BorrowEquipment: React.FC = () => {
@@ -74,12 +74,12 @@ export const BorrowEquipment: React.FC = () => {
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     let filteredItems = items;
-    
+
     // กรองตามหมวดหมู่
     if (selectedCategory) {
       filteredItems = filteredItems.filter(item => item.category === selectedCategory);
     }
-    
+
     // กรองตามคำค้นหา
     if (q) {
       filteredItems = filteredItems.filter((it) =>
@@ -88,7 +88,7 @@ export const BorrowEquipment: React.FC = () => {
         it.description?.toLowerCase().includes(q)
       );
     }
-    
+
     return filteredItems;
   }, [items, query, selectedCategory]);
 
@@ -112,12 +112,12 @@ export const BorrowEquipment: React.FC = () => {
 
     // ตรวจสอบว่าอุปกรณ์นี้ถูกเลือกแล้วหรือไม่
     const existingItem = selectedItems.find(selected => selected.id === item.id);
-    
+
     if (existingItem) {
       // ถ้าเลือกแล้ว ให้เพิ่มจำนวน 1 ชิ้น
       if (existingItem.selected_quantity < (item.quantity_available || 0)) {
-        setSelectedItems(prev => prev.map(selected => 
-          selected.id === item.id 
+        setSelectedItems(prev => prev.map(selected =>
+          selected.id === item.id
             ? { ...selected, selected_quantity: selected.selected_quantity + 1 }
             : selected
         ));
@@ -141,7 +141,7 @@ export const BorrowEquipment: React.FC = () => {
   };
 
   const handleIncreaseQuantity = (id: number, maxAvailable: number) => {
-    setSelectedItems(prev => prev.map(item => 
+    setSelectedItems(prev => prev.map(item =>
       item.id === id && item.selected_quantity < maxAvailable
         ? { ...item, selected_quantity: item.selected_quantity + 1 }
         : item
@@ -149,7 +149,7 @@ export const BorrowEquipment: React.FC = () => {
   };
 
   const handleDecreaseQuantity = (id: number) => {
-    setSelectedItems(prev => prev.map(item => 
+    setSelectedItems(prev => prev.map(item =>
       item.id === id && item.selected_quantity > 1
         ? { ...item, selected_quantity: item.selected_quantity - 1 }
         : item
@@ -161,7 +161,7 @@ export const BorrowEquipment: React.FC = () => {
       alert('กรุณาเลือกอุปกรณ์ที่ต้องการยืม');
       return;
     }
-    
+
     setShowBorrowModal(true);
   };
 
@@ -196,11 +196,11 @@ export const BorrowEquipment: React.FC = () => {
       };
 
       await apiService.createBorrowRequest(requestData);
-      
+
       // รีเซ็ตข้อมูล
       setSelectedItems([]);
       setShowBorrowModal(false);
-      
+
       await Swal.fire({
         icon: 'success',
         title: 'สำเร็จ!',
@@ -209,7 +209,7 @@ export const BorrowEquipment: React.FC = () => {
         confirmButtonColor: '#0EA5E9'
       });
 
-      
+
     } catch (error) {
       console.error('Error creating borrow request:', error);
       await Swal.fire({
@@ -289,7 +289,7 @@ export const BorrowEquipment: React.FC = () => {
         `}
       </style>
       <div className="flex-1 flex flex-col overflow-hidden">
-     
+
 
 
         {/* Main Content */}
@@ -302,7 +302,7 @@ export const BorrowEquipment: React.FC = () => {
                 <div className="flex-1">
                   <SearchInput value={query} onChange={setQuery} placeholder="ค้นหาอุปกรณ์ตามชื่อ..." />
                 </div>
-                
+
                 {/* ช่องเลือกหมวดหมู่ */}
                 <div className="min-w-[120px]">
                   <select
@@ -322,7 +322,7 @@ export const BorrowEquipment: React.FC = () => {
 
               {/* Pagination Controls */}
               <div className="flex items-center justify-end gap-1.5 mt-2">
-                <PageSizeSelect value={itemsPerPage} onChange={(v)=>{ setItemsPerPage(v); setCurrentPage(1); }} totalItems={totalItems} options={[5,10,20,50]} />
+                <PageSizeSelect value={itemsPerPage} onChange={(v) => { setItemsPerPage(v); setCurrentPage(1); }} totalItems={totalItems} options={[5, 10, 20, 50]} />
                 <button
                   onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
                   disabled={currentPage === 1}
@@ -345,33 +345,33 @@ export const BorrowEquipment: React.FC = () => {
             <div className="flex-1 p-1 sm:p-4">
               <div className="h-[600px] overflow-y-auto border border-gray-200 rounded-lg bg-gray-50 p-2">
                 <div className="grid grid-cols-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-1 sm:gap-3">
-                {paginatedItems.map((item, index) => {
-                  const isSelected = selectedItems.some(selected => selected.id === item.id);
-                  const isAvailable = (item.status === 'available' || item.status === 'limited') && (item.quantity_available || 0) > 0;
-                  
-                  return (
-                    <div  
-                      key={item.id}
-                      className={`relative ${isSelected ? 'ring-2 ring-[#0EA5E9] rounded-xl' : ''} ${!isAvailable ? 'opacity-50' : ''} animate-fade-in-up transition-all hover:shadow-lg`}
-                      style={{ animationDelay: `${index * 100}ms` }}
-                    >
-                      <EquipmentCard
-                        name={item.name}
-                        category={item.category}
-                        quantityAvailable={item.quantity_available ?? item.quantity}
-                        quantityTotal={item.quantity_total ?? item.quantity}
-                        status={item.status}
-                        imageUrl={item.image_url}
-                        onSelect={() => handleEquipmentSelect(item)}
-                      />
-                      {isSelected && (
-                        <div className="absolute top-2 right-2 bg-blue-500 text-white rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold">
-                          {selectedItems.find(selected => selected.id === item.id)?.selected_quantity || 0}
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
+                  {paginatedItems.map((item, index) => {
+                    const isSelected = selectedItems.some(selected => selected.id === item.id);
+                    const isAvailable = (item.status === 'available' || item.status === 'limited') && (item.quantity_available || 0) > 0;
+
+                    return (
+                      <div
+                        key={item.id}
+                        className={`relative ${isSelected ? 'ring-2 ring-[#0EA5E9] rounded-xl' : ''} ${!isAvailable ? 'opacity-50' : ''} animate-fade-in-up transition-all hover:shadow-lg`}
+                        style={{ animationDelay: `${index * 100}ms` }}
+                      >
+                        <EquipmentCard
+                          name={item.name}
+                          category={item.category}
+                          quantityAvailable={item.quantity_available ?? item.quantity}
+                          quantityTotal={item.quantity_total ?? item.quantity}
+                          status={item.status}
+                          imageUrl={item.image_url}
+                          onSelect={() => handleEquipmentSelect(item)}
+                        />
+                        {isSelected && (
+                          <div className="absolute top-2 right-2 bg-blue-500 text-white rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold">
+                            {selectedItems.find(selected => selected.id === item.id)?.selected_quantity || 0}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             </div>
@@ -395,7 +395,7 @@ export const BorrowEquipment: React.FC = () => {
                 ส่งคำขอยืม
               </button>
             </div>
-            
+
             <div className="p-2 sm:p-4">
               <div className="rounded-xl bg-white">
                 {selectedItems.length === 0 ? (
@@ -409,46 +409,46 @@ export const BorrowEquipment: React.FC = () => {
                     {selectedItems.map((item, index) => (
                       <div key={item.id} className="border rounded-lg p-2 sm:p-3 bg-[#F0F9FF] animate-slide-in-right transition-all hover:shadow-md" style={{ animationDelay: `${index * 50}ms` }}>
                         <div className="flex items-start gap-2 sm:gap-3">
-                        <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gray-200 rounded-lg flex items-center justify-center flex-shrink-0">
-                          {item.image_url ? (
-                            <img
-                              src={item.image_url}
-                              alt={item.name}
-                              className="w-full h-full object-cover rounded-lg"
-                            />
-                          ) : (
-                            <svg className="w-5 h-5 sm:w-6 sm:h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                            </svg>
-                          )}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <h3 className="font-medium text-xs sm:text-sm truncate">{item.name}</h3>
-                          <p className="text-xs text-gray-500">{item.category}</p>
-                          <p className="text-xs text-gray-600 mt-1">
-                            คงเหลือ: {item.quantity_available} ชิ้น
-                          </p>
-                          
-                          {/* ปุ่มควบคุมจำนวน */}
-                          <div className="flex items-center gap-1 sm:gap-2 mt-2">
-                            <button
-                              onClick={() => handleDecreaseQuantity(item.id)}
-                              className="w-5 h-5 sm:w-6 sm:h-6 bg-gray-200 hover:bg-gray-300 rounded-full flex items-center justify-center text-xs"
-                            >
-                              -
-                            </button>
-                            <span className="text-xs sm:text-sm font-medium min-w-[16px] sm:min-w-[20px] text-center">
-                              {item.selected_quantity}
-                            </span>
-                            <button
-                              onClick={() => handleIncreaseQuantity(item.id, item.quantity_available || 0)}
-                              disabled={item.selected_quantity >= (item.quantity_available || 0)}
-                              className="w-5 h-5 sm:w-6 sm:h-6 bg-gray-200 hover:bg-gray-300 rounded-full flex items-center justify-center text-xs disabled:opacity-50 disabled:cursor-not-allowed"
-                            >
-                              +
-                            </button>
+                          <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gray-200 rounded-lg flex items-center justify-center flex-shrink-0">
+                            {item.image_url ? (
+                              <img
+                                src={item.image_url}
+                                alt={item.name}
+                                className="w-full h-full object-cover rounded-lg"
+                              />
+                            ) : (
+                              <svg className="w-5 h-5 sm:w-6 sm:h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                              </svg>
+                            )}
                           </div>
-                        </div>
+                          <div className="flex-1 min-w-0">
+                            <h3 className="font-medium text-xs sm:text-sm truncate">{item.name}</h3>
+                            <p className="text-xs text-gray-500">{item.category}</p>
+                            <p className="text-xs text-gray-600 mt-1">
+                              คงเหลือ: {item.quantity_available} ชิ้น
+                            </p>
+
+                            {/* ปุ่มควบคุมจำนวน */}
+                            <div className="flex items-center gap-1 sm:gap-2 mt-2">
+                              <button
+                                onClick={() => handleDecreaseQuantity(item.id)}
+                                className="w-5 h-5 sm:w-6 sm:h-6 bg-gray-200 hover:bg-gray-300 rounded-full flex items-center justify-center text-xs"
+                              >
+                                -
+                              </button>
+                              <span className="text-xs sm:text-sm font-medium min-w-[16px] sm:min-w-[20px] text-center">
+                                {item.selected_quantity}
+                              </span>
+                              <button
+                                onClick={() => handleIncreaseQuantity(item.id, item.quantity_available || 0)}
+                                disabled={item.selected_quantity >= (item.quantity_available || 0)}
+                                className="w-5 h-5 sm:w-6 sm:h-6 bg-gray-200 hover:bg-gray-300 rounded-full flex items-center justify-center text-xs disabled:opacity-50 disabled:cursor-not-allowed"
+                              >
+                                +
+                              </button>
+                            </div>
+                          </div>
                           <button
                             onClick={() => handleRemoveSelected(item.id)}
                             className="text-red-500 hover:text-red-700 p-1 flex-shrink-0"
@@ -463,7 +463,7 @@ export const BorrowEquipment: React.FC = () => {
                 )}
               </div>
             </div>
-            
+
           </div>
         </div>
       </div>
