@@ -1,5 +1,5 @@
 import React from 'react';
-import { MainLayout } from '../../components/layout';
+import { MainLayout } from '@/components/layout';
 
 export const MostBorrowedEquipment: React.FC = () => {
   return (
