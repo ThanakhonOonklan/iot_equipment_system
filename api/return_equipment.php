@@ -39,6 +39,17 @@ try {
 
 
 function listActiveBorrowers(PDO $conn) {
+  $driver = $conn->getAttribute(PDO::ATTR_DRIVER_NAME);
+  $warningDateExpr = $driver === 'pgsql'
+    ? "NOW() + INTERVAL '3 days'"
+    : 'DATE_ADD(NOW(), INTERVAL 3 DAY)';
+  $daysRemainingExpr = $driver === 'pgsql'
+    ? "CAST(DATE_PART('day', b.due_date - NOW()) AS INT)"
+    : 'DATEDIFF(b.due_date, NOW())';
+  $borrowingIdsExpr = $driver === 'pgsql'
+    ? "STRING_AGG(DISTINCT b.id::text, ',')"
+    : 'GROUP_CONCAT(DISTINCT b.id)';
+
   $stmt = $conn->prepare("
     SELECT 
       MIN(b.id) as borrowing_id,
@@ -51,11 +62,11 @@ function listActiveBorrowers(PDO $conn) {
       COUNT(b.id) as total_items,
       CASE 
         WHEN b.due_date < NOW() THEN 'overdue'
-        WHEN b.due_date < DATE_ADD(NOW(), INTERVAL 3 DAY) THEN 'warning'
+        WHEN b.due_date < {$warningDateExpr} THEN 'warning'
         ELSE 'normal'
       END as status,
-      DATEDIFF(b.due_date, NOW()) as days_remaining,
-      GROUP_CONCAT(DISTINCT b.id) as borrowing_ids
+      {$daysRemainingExpr} as days_remaining,
+      {$borrowingIdsExpr} as borrowing_ids
     FROM borrowing b
     JOIN users u ON b.user_id = u.id
     WHERE b.status = 'borrowed'
@@ -63,7 +74,7 @@ function listActiveBorrowers(PDO $conn) {
     ORDER BY 
       CASE 
         WHEN b.due_date < NOW() THEN 1
-        WHEN b.due_date < DATE_ADD(NOW(), INTERVAL 3 DAY) THEN 2
+        WHEN b.due_date < {$warningDateExpr} THEN 2
         ELSE 3
       END,
       b.due_date ASC
@@ -74,6 +85,11 @@ function listActiveBorrowers(PDO $conn) {
   Response::success('ดึงข้อมูลผู้ยืมสำเร็จ', ['borrowers' => $borrowers]);
 }
 function getBorrowerDetails(PDO $conn, int $borrowingId) {
+  $driver = $conn->getAttribute(PDO::ATTR_DRIVER_NAME);
+  $borrowingIdsExpr = $driver === 'pgsql'
+    ? "STRING_AGG(b.id::text, ',')"
+    : 'GROUP_CONCAT(b.id)';
+
   $mainBorrowingStmt = $conn->prepare("
     SELECT 
       b.user_id,
@@ -102,7 +118,7 @@ function getBorrowerDetails(PDO $conn, int $borrowingId) {
       COUNT(b.id) as quantity_borrowed,
       MIN(b.borrow_date) as borrow_date,
       MIN(b.due_date) as due_date,
-      GROUP_CONCAT(b.id) as borrowing_ids
+      {$borrowingIdsExpr} as borrowing_ids
     FROM borrowing b
     JOIN equipment e ON b.equipment_id = e.id
     WHERE b.user_id = ? 
