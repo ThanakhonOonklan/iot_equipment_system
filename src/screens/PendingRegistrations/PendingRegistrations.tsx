@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { MainLayout } from '../../components/layout';
+import { MainLayout } from '../../components/Layout';
 import { apiService, type PendingRegistration } from '../../services/api';
 import { Check, X, CheckSquare, Square, Inbox } from 'lucide-react';
 import SearchInput from '../../components/ui/SearchInput';

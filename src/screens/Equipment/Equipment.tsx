@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { Card } from "../../components/ui/card";
 import EquipmentCard, { EquipmentStatus } from "../../components/ui/EquipmentCard";
 import apiService, { type Equipment as EquipmentModel } from "../../services/api";
-import { MainLayout, SlideInPanel } from '../../components/layout';
+import { MainLayout, SlideInPanel } from '../../components/Layout';
 import { CreateEquipmentForm, EditEquipmentForm } from "../../components/equipment/forms";
 import SearchInput from "../../components/ui/SearchInput";
 import PageSizeSelect from "../../components/ui/PageSizeSelect";

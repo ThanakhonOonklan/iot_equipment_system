@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { MainLayout } from '../../components/layout';
+import { MainLayout } from '../../components/Layout';
 import { EquipmentCard, EquipmentStatus } from "../../components/ui/EquipmentCard";
 import { BorrowRequestModal } from "../../components/borrow-requests/BorrowRequestModal";
 import { apiService } from "../../services/api";
