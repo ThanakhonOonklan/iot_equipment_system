@@ -4,7 +4,7 @@ api/
 *.sql
 composer.json
 composer.lock
-.render-buildpack.txtz
+.render-buildpack.txt
 
 # Database and config
 config.php
