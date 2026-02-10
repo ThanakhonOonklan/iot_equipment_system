@@ -68,7 +68,16 @@ function listHistory(PDO $conn) {
     LEFT JOIN equipment e ON b.equipment_id = e.id
     LEFT JOIN borrowing_history bh ON b.id = bh.borrowing_id AND bh.action = 'borrow'
     LEFT JOIN users approver ON bh.approver_id = approver.id
-    GROUP BY b.user_id, b.borrow_date, b.due_date, b.status, b.notes, approver.fullname
+    GROUP BY 
+      b.user_id,
+      u.fullname,
+      u.student_id,
+      b.borrow_date,
+      b.due_date,
+      b.return_date,
+      b.status,
+      b.notes,
+      approver.fullname
     ORDER BY b.borrow_date DESC, b.user_id
   ");
   $stmt->execute();
