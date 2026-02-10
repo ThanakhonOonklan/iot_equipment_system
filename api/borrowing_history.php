@@ -38,6 +38,14 @@ try {
 }
 
 function listHistory(PDO $conn) {
+  $driver = $conn->getAttribute(PDO::ATTR_DRIVER_NAME);
+  $equipmentNamesExpr = $driver === 'pgsql'
+    ? "STRING_AGG(DISTINCT e.name, ', ')"
+    : "GROUP_CONCAT(DISTINCT e.name ORDER BY e.name SEPARATOR ', ')";
+  $categoriesExpr = $driver === 'pgsql'
+    ? "STRING_AGG(DISTINCT e.category, ', ')"
+    : "GROUP_CONCAT(DISTINCT e.category ORDER BY e.category SEPARATOR ', ')";
+
   // ดึงข้อมูลประวัติการยืม-คืนแบบใหม่ - แยกตามคำขอที่ต่างกัน
   $stmt = $conn->prepare("
     SELECT 
@@ -51,8 +59,8 @@ function listHistory(PDO $conn) {
       b.notes,
       COUNT(b.id) as borrowing_count,
       COUNT(DISTINCT e.id) as equipment_count,
-      GROUP_CONCAT(DISTINCT e.name ORDER BY e.name SEPARATOR ', ') as equipment_names,
-      GROUP_CONCAT(DISTINCT e.category ORDER BY e.category SEPARATOR ', ') as categories,
+      {$equipmentNamesExpr} as equipment_names,
+      {$categoriesExpr} as categories,
       COALESCE(approver.fullname, 'ระบบ') as approver_name,
       MIN(b.id) as borrowing_id
     FROM borrowing b

@@ -4,7 +4,7 @@ api/
 *.sql
 composer.json
 composer.lock
-.render-buildpack.txt
+.render-buildpack.txtz
 
 # Database and config
 config.php
@@ -15,3 +15,4 @@ storage/
 .env
 .env.local
 node_modules/
+

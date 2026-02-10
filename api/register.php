@@ -128,7 +128,7 @@ try {
         Response::error('ไม่สามารถสร้างบัญชีได้', 500);
     }
     
-    $user_id = $conn->lastInsertId();
+    $user_id = dbLastInsertId($conn, 'users');
     
     // ดึงข้อมูลผู้ใช้ที่สร้างใหม่
     $select_query = "SELECT id, student_id, email, fullname, role, status, created_at 

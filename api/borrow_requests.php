@@ -89,18 +89,19 @@ function createBorrowRequest($conn, $input) {
     
     try {
         // Create borrow request
-        $stmt = $conn->prepare('
+        $requestId = dbInsertAndGetId(
+            $conn,
+            '
             INSERT INTO borrow_requests (user_id, borrow_date, return_date, notes) 
             VALUES (?, ?, ?, ?)
-        ');
-        $stmt->execute([
-            $input['user_id'],
-            $input['borrow_date'],
-            $input['return_date'],
-            $input['notes'] ?? null
-        ]);
-        
-        $requestId = $conn->lastInsertId();
+            ',
+            [
+                $input['user_id'],
+                $input['borrow_date'],
+                $input['return_date'],
+                $input['notes'] ?? null
+            ]
+        );
         
         // Create request items
         foreach ($input['items'] as $item) {
@@ -211,7 +212,7 @@ function updateBorrowRequest($conn, $input) {
                         'อนุมัติโดย: ' . $approver_name
                     ]);
                     
-                    $borrowingId = $conn->lastInsertId();
+                    $borrowingId = dbLastInsertId($conn, 'borrowing');
                     
                     // Create borrowing history record
                     $historyStmt = $conn->prepare('
@@ -233,8 +234,8 @@ function updateBorrowRequest($conn, $input) {
                         UPDATE equipment 
                         SET quantity_available = quantity_available - 1,
                             status = CASE 
-                                WHEN quantity_available - 1 <= 0 THEN "unavailable"
-                                WHEN quantity_available - 1 <= 5 THEN "limited"
+                                WHEN quantity_available - 1 <= 0 THEN \'unavailable\'
+                                WHEN quantity_available - 1 <= 5 THEN \'limited\'
                                 ELSE status
                             END
                         WHERE id = ?
