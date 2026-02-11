@@ -75,7 +75,7 @@ function createEquipment($conn, $input) {
     Response::error('ไม่สามารถเพิ่มอุปกรณ์ได้', 500);
   }
 
-  $id = $conn->lastInsertId();
+  $id = dbLastInsertId($conn, 'equipment');
   $sel = $conn->prepare('SELECT id, name, description, category, image_url, quantity_total, quantity_available, status, created_at FROM equipment WHERE id = :id');
   $sel->bindParam(':id', $id, PDO::PARAM_INT);
   $sel->execute();

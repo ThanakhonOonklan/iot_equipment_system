@@ -15,21 +15,7 @@ try {
   $db = new Database();
   $conn = $db->getConnection();
 
-  $conn->exec("CREATE TABLE IF NOT EXISTS pending_registrations (
-    id INT(11) NOT NULL AUTO_INCREMENT,
-    fullname VARCHAR(100) NOT NULL,
-    email VARCHAR(50) NOT NULL,
-    student_id VARCHAR(14) NOT NULL,
-    password_hash VARCHAR(255) NOT NULL,
-    role ENUM('admin','staff','user') NOT NULL DEFAULT 'user',
-    status ENUM('pending','approved','rejected') NOT NULL DEFAULT 'pending',
-    notes TEXT DEFAULT NULL,
-    requested_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    reviewed_at TIMESTAMP NULL DEFAULT NULL,
-    PRIMARY KEY (id),
-    UNIQUE KEY uniq_student_id (student_id),
-    UNIQUE KEY uniq_email (email)
-  ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+  ensurePendingRegistrationsTable($conn);
 
   $method = $_SERVER['REQUEST_METHOD'];
   $input = json_decode(file_get_contents('php://input'), true);
@@ -53,6 +39,48 @@ try {
 } catch (Throwable $e) {
   error_log('Pending Registration API error: ' . $e->getMessage());
   Response::error('Server error', 500);
+}
+
+function ensurePendingRegistrationsTable(PDO $conn): void {
+  $driver = $conn->getAttribute(PDO::ATTR_DRIVER_NAME);
+
+  if ($driver === 'pgsql') {
+    $conn->exec("
+      CREATE TABLE IF NOT EXISTS pending_registrations (
+        id BIGSERIAL PRIMARY KEY,
+        fullname VARCHAR(100) NOT NULL,
+        email VARCHAR(50) NOT NULL UNIQUE,
+        student_id VARCHAR(14) NOT NULL UNIQUE,
+        password_hash VARCHAR(255) NOT NULL,
+        role VARCHAR(20) NOT NULL DEFAULT 'user',
+        status VARCHAR(20) NOT NULL DEFAULT 'pending',
+        notes TEXT DEFAULT NULL,
+        requested_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        reviewed_at TIMESTAMP NULL DEFAULT NULL,
+        CONSTRAINT chk_pending_role CHECK (role IN ('admin','staff','user')),
+        CONSTRAINT chk_pending_status CHECK (status IN ('pending','approved','rejected'))
+      )
+    ");
+    return;
+  }
+
+  $conn->exec("
+    CREATE TABLE IF NOT EXISTS pending_registrations (
+      id INT(11) NOT NULL AUTO_INCREMENT,
+      fullname VARCHAR(100) NOT NULL,
+      email VARCHAR(50) NOT NULL,
+      student_id VARCHAR(14) NOT NULL,
+      password_hash VARCHAR(255) NOT NULL,
+      role ENUM('admin','staff','user') NOT NULL DEFAULT 'user',
+      status ENUM('pending','approved','rejected') NOT NULL DEFAULT 'pending',
+      notes TEXT DEFAULT NULL,
+      requested_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      reviewed_at TIMESTAMP NULL DEFAULT NULL,
+      PRIMARY KEY (id),
+      UNIQUE KEY uniq_student_id (student_id),
+      UNIQUE KEY uniq_email (email)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+  ");
 }
 
 function listPending(PDO $conn) {

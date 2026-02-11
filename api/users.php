@@ -121,7 +121,7 @@ function createUser($conn, $input) {
     Response::error('ไม่สามารถเพิ่มผู้ใช้ได้', 500);
   }
 
-  $newId = $conn->lastInsertId();
+  $newId = dbLastInsertId($conn, 'users');
   $sel = $conn->prepare('SELECT id, student_id, email, fullname, role, status, created_at FROM users WHERE id = :id');
   $sel->bindParam(':id', $newId, PDO::PARAM_INT);
   $sel->execute();
