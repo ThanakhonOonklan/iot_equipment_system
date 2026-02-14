@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { MainLayout, SlideInPanel } from '../../components/layout';
+import { MainLayout, SlideInPanel } from '../../components/Layout';
 import { EditUserForm } from "../../components/users";
 import apiService, { User } from "../../services/api";
 import { Card } from "../../components/ui/card";

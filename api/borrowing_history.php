@@ -38,6 +38,14 @@ try {
 }
 
 function listHistory(PDO $conn) {
+  $driver = $conn->getAttribute(PDO::ATTR_DRIVER_NAME);
+  $equipmentNamesExpr = $driver === 'pgsql'
+    ? "STRING_AGG(DISTINCT e.name, ', ')"
+    : "GROUP_CONCAT(DISTINCT e.name ORDER BY e.name SEPARATOR ', ')";
+  $categoriesExpr = $driver === 'pgsql'
+    ? "STRING_AGG(DISTINCT e.category, ', ')"
+    : "GROUP_CONCAT(DISTINCT e.category ORDER BY e.category SEPARATOR ', ')";
+
   // ดึงข้อมูลประวัติการยืม-คืนแบบใหม่ - แยกตามคำขอที่ต่างกัน
   $stmt = $conn->prepare("
     SELECT 
@@ -51,8 +59,8 @@ function listHistory(PDO $conn) {
       b.notes,
       COUNT(b.id) as borrowing_count,
       COUNT(DISTINCT e.id) as equipment_count,
-      GROUP_CONCAT(DISTINCT e.name ORDER BY e.name SEPARATOR ', ') as equipment_names,
-      GROUP_CONCAT(DISTINCT e.category ORDER BY e.category SEPARATOR ', ') as categories,
+      {$equipmentNamesExpr} as equipment_names,
+      {$categoriesExpr} as categories,
       COALESCE(approver.fullname, 'ระบบ') as approver_name,
       MIN(b.id) as borrowing_id
     FROM borrowing b
@@ -60,7 +68,16 @@ function listHistory(PDO $conn) {
     LEFT JOIN equipment e ON b.equipment_id = e.id
     LEFT JOIN borrowing_history bh ON b.id = bh.borrowing_id AND bh.action = 'borrow'
     LEFT JOIN users approver ON bh.approver_id = approver.id
-    GROUP BY b.user_id, b.borrow_date, b.due_date, b.status, b.notes, approver.fullname
+    GROUP BY 
+      b.user_id,
+      u.fullname,
+      u.student_id,
+      b.borrow_date,
+      b.due_date,
+      b.return_date,
+      b.status,
+      b.notes,
+      approver.fullname
     ORDER BY b.borrow_date DESC, b.user_id
   ");
   $stmt->execute();

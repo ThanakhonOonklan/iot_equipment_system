@@ -93,7 +93,7 @@ function createBorrowing(PDO $conn, array $input) {
     $ins->bindParam(':notes', $notes, PDO::PARAM_STR);
     $ins->execute();
     
-    $borrowing_id = $conn->lastInsertId();
+    $borrowing_id = dbLastInsertId($conn, 'borrowing');
     
     // Update equipment quantity
     $upd = $conn->prepare('UPDATE equipment SET quantity_available = quantity_available - :qty WHERE id = :id');
